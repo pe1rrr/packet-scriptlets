@@ -194,6 +194,7 @@ function webmenu() {
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[400] COVID Information Rijksoverheid (NL)"
 
+	echo "Enter Choice: (Quit: 0)"
 	read menuinput
 	menuchoice=${menuinput//[$'\t\r\n']} && menuinput=${menuinput%%*( )}
 	idreg='^([0-9])+$'
