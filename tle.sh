@@ -2,8 +2,46 @@
 # Make sure you have common.sh in the same directory as this script and configured.
 source common.sh
 
-regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-yesnoregex='^(Y|y)$'
+# Version 1.0 PE1RRR TLE Downloader Portal for Packet
+# Configuration
+# 
+# For simplicity, I use openbsd's inetd which is available for Debian/Raspbian with sudo apt install openbsd-inetd
+# 
+# Add the following line to /etc/inetd.conf
+# 
+# tle		stream	tcp	nowait	bpq		/full/path/to/your/packet-scriptlets/tle.sh 
+# 
+# The word 'bpq' above refers to the userid that this process will run under.
+#
+# Add the following line to /etc/services and make a note of the port number you choose. Make sure the one you pick does
+# not exist and is within the range of ports available.
+#
+# tle		63005/tcp   # Celestrak TLE Downloader
+# 
+# Enable inetd: sudo systemctl enable inetd
+#               sudo service inetd start
+#
+# In bpq32.cfg add the port specified above (63005) to the BPQ Telnet port list, CMDPORT= 
+#
+# Note the port's position offset in the list as that will be referenced in the APPLICATION line next.
+# The first port in the CMDPORT= line is position 0 (zero), the next would be 1, then 2 and so on.
+#
+# Locate your APPLICATION line definitions in bpq32.cfg and another one next in the sequence. Make
+# sure it has a unique <app number> between 1-32.
+#
+# Syntax: 
+# APPLICATION <app number 1-32>,<node command>,<node instruction>
+#
+# APPLICATION 24,TLE,C 10 HOST 2 S
+#
+# <node instruction> is where the command 'web' is told to use BPQ port 10 (the telnet port, yours may be different!)
+# HOST is a command to tell BPQ to look at the BPQ Telnet CMDPORT= list, and '2' is to pick offset position 2, that
+# in turn relsolves to TCP port 63005. The 'S' tells the node to return the user back to the node when they exit
+# the web portal instead of disconnecting them, it refers to the word 'Stay'.
+
+# Further config is at the bottom of the file for customization of the menu options as well as welcome message.
+##### End of Config - Do not change anything below here.
+
 quitcmds='^(B|b|q|Q).*$'
 
 set -e
