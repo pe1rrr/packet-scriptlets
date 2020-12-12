@@ -1,4 +1,6 @@
 #!/bin/bash 
+# Make sure you have common.sh in the same directory as this script and configured.
+source common.sh
 
 # Version 1.0 PE1RRR WEB Portal for Packet
 # Configuration
@@ -36,22 +38,6 @@
 # HOST is a command to tell BPQ to look at the BPQ Telnet CMDPORT= list, and '1' is to pick offset position 1, that
 # in turn relsolves to TCP port 63004. The 'S' tells the node to return the user back to the node when they exit
 # the web portal instead of disconnecting them, it refers to the word 'Stay'.
-
-lynx="/usr/bin/lynx"  # sudo apt install lynx
-curl="/usr/bin/curl"  # sudo apt install curl
-logfile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-
-# Logfile: Again the word 'bpq' above refers to the user and group that the inetd server starts the process under. It must be
-# the same to have permission to write to this logfile.
-
-# It is recommended to set up a proxy server locally to handle the requests from this script
-# it adds a level of control over which content can and cannot be requested, squid proxy is
-# utilized for this, but if you do not want to use it, comment the 2 lines out below.
-# I have set up my squid proxy to use alternate DNS servers of OpenDNS FamilyShield.
-
-myproxy="http://127.0.0.1:3128"
-export http_proxy=$myproxy
-
 
 # Further config is at the bottom of the file for customization of the menu options as well as welcome message.
 ##### End of Config - Do not change anything below here.
@@ -120,11 +106,11 @@ function startquery() {
 
 function loguser() {
 	date=`date`
-	if ! [ -e $logfile ]
+	if ! [ -e $weblogfile ]
 	then
-		touch $logfile
+		touch $weblogfile
 	fi
-	echo "$date: $callsign requested $url" >> $logfile
+	echo "$date: $callsign requested $url" >> $weblogfile
 }
 
 function getpage() {
