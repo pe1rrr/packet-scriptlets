@@ -7,7 +7,7 @@
 # 
 # Add the following line to /etc/inetd.conf
 # 
-# browse		stream	tcp	nowait	bpq		/full/path/to/your/packet-scriptlets//browse.sh client ax25
+# browse		stream	tcp	nowait	bpq		/full/path/to/your/packet-scriptlets/browse.sh client ax25
 # 
 # The word 'bpq' above refers to the userid that this process will run under.
 #
@@ -19,10 +19,10 @@
 # Enable inetd: sudo systemctl enable inetd
 #               sudo service inetd start
 #
-# In bpq32.cfg add the port specified above (63004) to the BPQ Telnet port list, CMDPORTS= 
+# In bpq32.cfg add the port specified above (63004) to the BPQ Telnet port list, CMDPORT= 
 #
 # Note the port's position offset in the list as that will be referenced in the APPLICATION line next.
-# The first port in the CMDPORTS= line is position 0 (zero), the next would be 1, then 2 and so on.
+# The first port in the CMDPORT= line is position 0 (zero), the next would be 1, then 2 and so on.
 #
 # Locate your APPLICATION line definitions in bpq32.cfg and another one next in the sequence. Make
 # sure it has a unique <app number> between 1-32.
@@ -33,7 +33,7 @@
 # APPLICATION 25,WEB,C 10 HOST 1 S
 #
 # <node instruction> is where the command 'web' is told to use BPQ port 10 (the telnet port, yours may be different!)
-# HOST is a command to tell BPQ to look at the BPQ Telnet CMDPORTS list, and '1' is to pick offset position 1, that
+# HOST is a command to tell BPQ to look at the BPQ Telnet CMDPORT= list, and '1' is to pick offset position 1, that
 # in turn relsolves to TCP port 63004. The 'S' tells the node to return the user back to the node when they exit
 # the web portal instead of disconnecting them, it refers to the word 'Stay'.
 
