@@ -1,10 +1,12 @@
 #!/bin/bash 
-# Make sure you have common.sh in the same directory as this script and configured.
-source common.sh
-
+#
 # Version 1.0 PE1RRR TLE Downloader Portal for Packet
+#
 # Configuration
+lynx="/usr/bin/lynx"  # sudo apt install lynx
+curl="/usr/bin/curl"  # sudo apt install curl
 # 
+# Usage & Installation
 # For simplicity, I use openbsd's inetd which is available for Debian/Raspbian with sudo apt install openbsd-inetd
 # 
 # Add the following line to /etc/inetd.conf
