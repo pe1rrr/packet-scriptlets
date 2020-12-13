@@ -128,7 +128,7 @@ function Begin() {
 	local URLFix
 	local Text
 
-	printf "Enter a web address (0 = Quit) : http://"
+	printf "Enter a web address (Q = quit) : http://"
 	read Address
 
 	# Trim Input
@@ -236,7 +236,7 @@ function Prompt() {
 
 	# Prompt
 	local LinkID
-	echo "Enter Link Number: (Q = quit L = list B = Back)"
+	echo "Enter Link Number: (Q = quit, L = listr, B = back, N = open new link)"
 	read LinkID
 
 	# Trim Input
@@ -247,9 +247,11 @@ function Prompt() {
 	local LinkIDRegex
 	local ListCommandRegex
 	local BackCommandRegex
-	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q)$)' # First Pass Regex
+	local NewCommandRegex
+	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N)$)' # First Pass Regex
 	ListCommandRegex='^(l|L)$' # Second Pass
 	BackCommandRegex='^(B|b)$' # Second Pass
+	NewCommandRegex='^(n|N)$' # Second Pass
 
 	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]  # First Pass
 	then
@@ -265,6 +267,9 @@ function Prompt() {
 		echo -e ${LinkList} # Display Links
 		unset Links # Kill the String to prevent looping additions.
 		Prompt "${URL}"# Again
+	elif [[ $LinkIDFix =~ $NewCommandRegex ]] # Second Pass
+	then
+		Begin
 	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
 	then
 		if [[ ${BackPage} == "none" ]]
@@ -342,13 +347,12 @@ function GetPage() {
 }
 
 function MainMenu() {
-	echo "This web portal is a work in progress."
-	echo ""
+	echo "Please note this portal is a work in progress and as such isn't yet fully featured and is still a little buggy!"
 	echo "[1] Enter your own web address"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[400] COVID Information Rijksoverheid (NL)"
 
-	echo "Enter Choice: (Quit: 0)"
+	echo "Enter Choice: (Q = quit)"
 
 	local IDRegex
 	local Choice
@@ -358,7 +362,7 @@ function MainMenu() {
 
 	# Trim
 	Selection=${Choice//[$'\t\r\n']} && Choice=${Choice%%*( )}
-	IDRegex='^([0-9])+$'
+	IDRegex='^([0-9]|q|Q)+$'
 
 	if ! [[ $Selection =~ $IDRegex ]]
 	then 
@@ -367,7 +371,13 @@ function MainMenu() {
 	    exit
 	fi
 
-	if [ $Selection -eq 0 ]
+	if [[ $Selection =~ $QuitRegex ]]
+	then
+		echo "Exiting... Bye!"
+		exit
+	fi
+
+	if [ $Selection -eq 0 ] 
 	then
 		exit
 	elif [ $Selection -eq 1 ]
