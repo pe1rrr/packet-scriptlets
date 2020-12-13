@@ -236,7 +236,7 @@ function Prompt() {
 
 	# Prompt
 	local LinkID
-	echo "Enter Link Number: (Q = quit, L = listr, B = back, N = open new link)"
+	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link)"
 	read LinkID
 
 	# Trim Input
