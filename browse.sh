@@ -3,9 +3,10 @@
 #
 # Configuration
 # 
-lynx="/usr/bin/lynx"  # sudo apt install lynx
-curl="/usr/bin/curl"  # sudo apt install curl
-weblogfile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
+LynxBin="/usr/bin/lynx"  # sudo apt install lynx
+CurlBin="/usr/bin/curl"  # sudo apt install curl
+WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
+Debug="1"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -53,9 +54,10 @@ export http_proxy=$myproxy
 
 # Further config is at the bottom of the file for customization of the menu options as well as welcome message.
 ##### End of Config - Do not change anything below here.
-linkregex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-yesnoregex='^(Y|y)$'
-quitcmds='^(B|b|q|Q)$'
+#
+# Global Vars
+LinkRegex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+QuitRegex='^(0|B|b|q|Q)$'
 
 set -e
 trap 'catch $? $LINENO' EXIT
@@ -79,148 +81,290 @@ fi
 
 
 
-function checkurl() {
-	if $curl --output /dev/null --silent --head --fail "$url"; then
-	  	echo "URL exists: $url - Loading..."
+function CheckURLSanity() {
+	local CheckURL=$1
+	local ContentType
+	local ContentTypeRegex
+
+	if ! [[ $CheckURL =~ $LinkRegex ]]
+	then 
+	    ReturnVal="Error: Address not valid"
+	    return 1
+	fi
+
+	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
+		ContentType=$($CurlBin -s -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
+		ContentTypeRegex='^(text\/html|text\/plain).*$'
+		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
+		then
+			ReturnVal="Error: Sorry, that content is not text!"
+			return 1
+		fi
+		return 0
  	else
-	        echo "URL does not exist: $url"
-		startquery
+		ReturnVal="Error: Sorry, ${CheckURL} does not appear to exist."
+		return 1
 	fi	
 
 }
 
-function startquery() {
-	echo "Put in an exact web address, and it will be fetched and displayed"
-	printf "Enter a web address (b = exit) : http://"
-	read address
-	urlfix=${address//[$'\t\r\n']} && address=${address%%*( )}
-	url="http://${urlfix}"
+function DownloadPage() {
+        local Text
+	local URL
+	URL=$1
 
-        if [[ $urlfix =~ $quitcmds ]]
+	# Maybe do sanity check here instead?
+
+	Text=`$LynxBin -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+
+	# Global
+	ReturnVal="${Text}"
+}
+
+
+function Begin() {
+	local Address
+	local URL
+	local URLFix
+	local Text
+
+	printf "Enter a web address (0 = Quit) : http://"
+	read Address
+
+	# Trim Input
+	URLFix=${Address//[$'\t\r\n']} && Address=${Address%%*( )}
+
+	# Force http regardless.
+	URL="http://${URLFix}"
+
+	# Offer an escape
+        if [[ $URLFix =~ $QuitRegex ]]
 	then
+		echo "Exiting...Bye!"
 		exit
 	fi
 
-	if [[ $url =~ $linkregex ]]
+	# Sanity Check the URL
+	if ! CheckURLSanity "${URL}"
 	then 
-	    echo "Link valid"
-	else
-	    echo "Link not valid"
-	    startquery
-	    exit
+		echo $ReturnVal
+		unset ReturnVal
+		Begin # Again
 	fi
-	checkurl
-	echo "Displaying Page..."
-	$lynx -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -dump  "${url}" 
-	loguser
-	readlink
+
+	# Generate Initial Page
+	DownloadPage "${URL}"
+	Text=$ReturnVal
+
+	# Display The Page
+	DisplayPage "${URL}" "${Text}"
+
+	# Clear Global
+	unset ReturnVal
+
+	# Write Request to Log
+	LogUser "${Address}"
+
+	Prompt "${URL}"
 }
 
-function loguser() {
-	date=`date`
-	if ! [ -e $weblogfile ]
+function DisplayPage() {
+	local URL
+	local Text
+
+	URL=$1
+	Text=$2
+
+	echo -e "Displaying ${URL}"
+	echo -e "${Text}"
+	return 0
+}
+
+function LogUser() {
+	local URL
+	local Date
+
+	URL=$1
+	Date=`date`
+
+	if ! [ -e ${WebLogFile} ]
 	then
-		touch $weblogfile
+		touch ${WebLogFile}
 	fi
-	echo "$date: $callsign requested $url" >> $weblogfile
-}
-
-function getpage() {
-        $lynx -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  $url |sed '/^$/d'
-	readlink
+	echo "${Date}: ${Callsign} requested ${URL}" >> ${WebLogFile}
 }
 
 
-function readlink() {
-	GetStuff=`$lynx -hiddenlinks=ignore -dump -unique_urls -listonly $url`
-	for stuff in $GetStuff
+
+function Prompt() {
+	local URL
+	local GetLinksOnly
+	local RestartURL
+
+	URL=$1
+	RestartURL=$1
+	# Fetch the same URL used in display but only return with the links listed
+	GetLinksOnly=`${LynxBin} -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+
+	# Compile list of results into an array.
+	local Links
+	local IndexRegex
+	for Results in ${GetLinksOnly}
 	do
-		stuffreg='^[0-9\.]+$'
-		if  ! [[ $stuff =~ $stuffreg ]]
+		IndexRegex='^[0-9\.]+$'
+		if  ! [[ $Results =~ $IndexRegex ]]
 		then
-			Links+=("$stuff")
+			Links+=("$Results")
 		fi
 	done
-	count=0
-	unset list
-	for value in "${Links[@]}"
+
+	# Build the human readable list of links
+	local Count
+	local LinkList
+	local Value
+	Count=0
+	for Value in "${Links[@]}"
 	do
-		     list+="Link $count = $value \n"
-		     count=$((count+1))
+		     LinkList+="Link $Count = $Value \n"
+		     Count=$((Count+1))
         done
+
+
+	# Prompt
+	local LinkID
 	echo "Enter Link Number: (0 = quit L = list)"
-	read linkid
-	linkidfix=${linkid//[$'\t\r\n']} && linkid=${linkid%%*( )}
-	linkidreg='(^([0-9])+$|^(l|L)$)'
-	if ! [[ $linkidfix =~ $linkidreg ]]
+	read LinkID
+
+	# Trim Input
+	local LinkIDFix
+	LinkIDFix=${LinkID//[$'\t\r\n']} && LinkID=${LinkID%%*( )}
+
+	# Handle Link Choice
+	local LinkIDRegex
+	local ListCommandRegex
+	LinkIDRegex='(^([0-9])+$|^(l|L|b|B)$)'
+	ListCommandRegex='^(l|L)$'
+
+	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]
 	then
-		echo "Invalid Link Number"
+		echo "Error: Oops! Invalid Link Number."
+		Prompt "${URL}" # Again
 		exit
-	fi
-
-	if [[ $linkidfix == 0 ]]
+	elif [[ $LinkIDFix == 0 ]]
 	then
-		echo "Exiting"
+		echo "Exiting...Bye!" # Escape
 		exit
-	fi
-	listregex='^(l|L)$'
-	if [[ $linkidfix =~ $listregex ]]
+	elif [[ $LinkIDFix =~ $ListCommandRegex ]]
 	then
-		echo -e $list
-		unset list
-		unset Links
-		readlink
+		echo -e ${LinkList} # Display Links
+		unset Links # Kill the String to prevent looping additions.
+		Prompt "${URL}"# Again
 	fi
 
 
-	linkurl=${Links[${linkidfix}]}
-	if [[ $linkurl =~ $linkregex ]]
+	# So an actual link ID has been requested...
+	# LinkRegex is Global
+	local LinkURL 
+
+	LinkURL=${Links[${LinkIDFix}]}
+	if ! [[ $LinkURL =~ $LinkRegex ]]
 	then 
-	    echo "Link valid"
-	else
-	    echo "Link not valid"
-	    startquery
+	    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
+	    unset Links
+	    Prompt "${RestartURL}" # Again
 	    exit
 	fi
-	Links=("")
-	url=$linkurl
-	loguser
-	getpage
+		
+	unset Links # Just to be sure.
+
+	if ! CheckURLSanity "${LinkURL}" 
+	then 
+		echo $ReturnVal
+		unset ReturnVal
+		Prompt "${RestartURL}" # Again - might not work!
+		exit
+	fi
+	local Text
+	DownloadPage "${LinkURL}"
+
+	Text="${ReturnVal}"
+
+	DisplayPage "${LinkURL}" "${Text}"
+
+	# Clear up Global
+	unset ReturnVal
+
+	LogUser "${LinkURL}"
+
+	# Loop Back
+	Prompt "${LinkURL}"
+
 }
 
-function webmenu() {
+function GetPage() {
+	local URL
+	URL=$1
 
+	# Generate Initial Page
+	DownloadPage "${URL}"
+	Text=$ReturnVal
+
+	# Display The Page
+	DisplayPage "${URL}" "${Text}"
+
+	# Clear Global
+	unset ReturnVal
+
+	Prompt "${URL}"
+}
+
+function MainMenu() {
+	echo "Please note this portal is a work in progress and as such isn't yet fully featured and is still a little buggy!"
 	echo "[1] Enter your own web address"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[400] COVID Information Rijksoverheid (NL)"
 
 	echo "Enter Choice: (Quit: 0)"
-	read menuinput
-	menuchoice=${menuinput//[$'\t\r\n']} && menuinput=${menuinput%%*( )}
-	idreg='^([0-9])+$'
-	if ! [[ $menuchoice =~ $idreg ]]
+
+	local IDRegex
+	local Choice
+	local URL
+
+	read Choice
+
+	# Trim
+	Selection=${Choice//[$'\t\r\n']} && Choice=${Choice%%*( )}
+	IDRegex='^([0-9])+$'
+
+	if ! [[ $Selection =~ $IDRegex ]]
 	then 
-	    echo "Choice not valid, try again"
-	    startquery
+	    echo "Error: Sorry, that selection was not valid, please check and try again."
+	    Begin
 	    exit
 	fi
 
-	if [ $menuchoice -eq 0 ]
+	if [ $Selection -eq 0 ]
 	then
 		exit
-	elif [ $menuchoice -eq 1 ]
-	        then startquery
+	elif [ $Selection -eq 1 ]
+	        then Begin
 		exit
-	elif [ $menuchoice -eq 100 ]
+	elif [ $Selection -eq 100 ]
 	then
-		url="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
-		getpage
-	elif [ $menuchoice -eq 400 ]
+		URL="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
+		GetPage "${URL}"
+	elif [ $Selection -eq 400 ]
 	then
-		url="https://www.rijksoverheid.nl/onderwerpen/coronavirus-covid-19"
-		getpage
+		URL="https://www.rijksoverheid.nl/onderwerpen/coronavirus-covid-19"
+		GetPage "${URL}"
+	else
+		echo "Error: Sorry, you must make a selection from the menu!"
+		Begin
 	fi
+
+
 }
+
 
 # Trim whitespaces and newlines from the callsign but not necessarily verify it is sane (its only for logging).
 # I should probably do full sanitization here, although the callsign is passed from BPQ itself automatically
@@ -231,4 +375,4 @@ callsign=${callsignin//[$'\t\r\n']} && callsignin=${callsignin%%*( )}
 echo "Welcome to Simple Packet Web"
 echo "All requests are logged, inappropriate sites are blocked by OpenDNS FamilyShield"
 
-webmenu
+MainMenu
