@@ -347,7 +347,7 @@ function GetPage() {
 }
 
 function MainMenu() {
-	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro""
+	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
 	echo "[1] Enter your own web address"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[400] COVID Information Rijksoverheid (NL)"
