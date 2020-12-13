@@ -342,7 +342,8 @@ function GetPage() {
 }
 
 function MainMenu() {
-	echo "Please note this portal is a work in progress and as such isn't yet fully featured and is still a little buggy!"
+	echo "This web portal is a work in progress."
+	echo ""
 	echo "[1] Enter your own web address"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[400] COVID Information Rijksoverheid (NL)"
