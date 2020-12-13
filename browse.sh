@@ -1,5 +1,5 @@
 #!/bin/bash 
-# Version 1.0 PE1RRR WEB Portal for Packet
+# Version 1.1 PE1RRR WEB Portal for Packet
 #
 # Configuration
 # 
@@ -49,7 +49,7 @@ export http_proxy=$myproxy
 #
 # <node instruction> is where the command 'web' is told to use BPQ port 10 (the telnet port, yours may be different!)
 # HOST is a command to tell BPQ to look at the BPQ Telnet CMDPORT= list, and '1' is to pick offset position 1, that
-# in turn relsolves to TCP port 63004. The 'S' tells the node to return the user back to the node when they exit
+# in turn resolves to TCP port 63004. The 'S' tells the node to return the user back to the node when they exit
 # the web portal instead of disconnecting them, it refers to the word 'Stay'.
 
 # Further config is at the bottom of the file for customization of the menu options as well as welcome message.
@@ -57,7 +57,8 @@ export http_proxy=$myproxy
 #
 # Global Vars
 LinkRegex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-QuitRegex='^(0|B|b|q|Q)$'
+QuitRegex='^(0|q|Q)$'
+BackPage="none"
 
 set -e
 trap 'catch $? $LINENO' EXIT
@@ -113,7 +114,6 @@ function DownloadPage() {
 	local URL
 	URL=$1
 
-	# Maybe do sanity check here instead?
 
 	Text=`$LynxBin -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
 
@@ -152,6 +152,9 @@ function Begin() {
 		Begin # Again
 	fi
 
+	# Update Last Page Global
+	BackPage="${URL}"
+
 	# Generate Initial Page
 	DownloadPage "${URL}"
 	Text=$ReturnVal
@@ -177,6 +180,7 @@ function DisplayPage() {
 
 	echo -e "Displaying ${URL}"
 	echo -e "${Text}"
+	echo -e "The previous page was: ${BackPage}"
 	return 0
 }
 
@@ -232,7 +236,7 @@ function Prompt() {
 
 	# Prompt
 	local LinkID
-	echo "Enter Link Number: (0 = quit L = list)"
+	echo "Enter Link Number: (Q = quit L = list B = Back)"
 	read LinkID
 
 	# Trim Input
@@ -242,23 +246,36 @@ function Prompt() {
 	# Handle Link Choice
 	local LinkIDRegex
 	local ListCommandRegex
-	LinkIDRegex='(^([0-9])+$|^(l|L|b|B)$)'
-	ListCommandRegex='^(l|L)$'
+	local BackCommandRegex
+	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q)$)' # First Pass Regex
+	ListCommandRegex='^(l|L)$' # Second Pass
+	BackCommandRegex='^(B|b)$' # Second Pass
 
-	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]
+	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]  # First Pass
 	then
 		echo "Error: Oops! Invalid Link Number."
 		Prompt "${URL}" # Again
 		exit
-	elif [[ $LinkIDFix == 0 ]]
+	elif [[ $LinkIDFix =~ $QuitRegex ]] # Second Pass
 	then
 		echo "Exiting...Bye!" # Escape
 		exit
-	elif [[ $LinkIDFix =~ $ListCommandRegex ]]
+	elif [[ $LinkIDFix =~ $ListCommandRegex ]] # Second Pass
 	then
 		echo -e ${LinkList} # Display Links
 		unset Links # Kill the String to prevent looping additions.
 		Prompt "${URL}"# Again
+	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
+	then
+		if [[ ${BackPage} == "none" ]]
+		then
+			Prompt "${URL}" # Again
+			exit
+		else
+			GetPage "${BackPage}"
+			Prompt "${BackPage}"
+		fi
+			
 	fi
 
 
@@ -284,7 +301,10 @@ function Prompt() {
 		Prompt "${RestartURL}" # Again - might not work!
 		exit
 	fi
-	local Text
+
+	# Update Back-Page Global
+	BackPage="${LinkURL}"
+
 	DownloadPage "${LinkURL}"
 
 	Text="${ReturnVal}"
@@ -295,6 +315,9 @@ function Prompt() {
 	unset ReturnVal
 
 	LogUser "${LinkURL}"
+
+	# Register a Back-Page in Global
+	BackPage="${LinkURL}"
 
 	# Loop Back
 	Prompt "${LinkURL}"
@@ -339,7 +362,7 @@ function MainMenu() {
 	if ! [[ $Selection =~ $IDRegex ]]
 	then 
 	    echo "Error: Sorry, that selection was not valid, please check and try again."
-	    Begin
+	    MainMenu
 	    exit
 	fi
 
@@ -359,7 +382,7 @@ function MainMenu() {
 		GetPage "${URL}"
 	else
 		echo "Error: Sorry, you must make a selection from the menu!"
-		Begin
+		MainMenu
 	fi
 
 
