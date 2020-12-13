@@ -350,7 +350,8 @@ function MainMenu() {
 	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
 	echo "[1] Enter your own web address"
 	echo "[100] COVID Information gov.uk (UK)"
-	echo "[400] COVID Information Rijksoverheid (NL)"
+	echo "[200] COVID Information CDC (US & Canada)"
+	echo "[400] COVID Information Rijksoverheid (Netherlands)"
 
 	echo "Enter Choice: (Q = quit)"
 
@@ -386,6 +387,10 @@ function MainMenu() {
 	elif [ $Selection -eq 100 ]
 	then
 		URL="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
+		GetPage "${URL}"
+	elif [ $Selection -eq 200 ]
+	then
+		URL="https://www.cdc.gov/coronavirus/2019-ncov/index.html"
 		GetPage "${URL}"
 	elif [ $Selection -eq 400 ]
 	then
