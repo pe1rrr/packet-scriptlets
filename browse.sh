@@ -1,12 +1,12 @@
 #!/bin/bash 
-# Version 1.1 PE1RRR WEB Portal for Packet
+# Version 0.1 PE1RRR WEB Portal for Packet
 #
 # Configuration
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Debug="1"
+Version="0.1"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -406,7 +406,7 @@ function MainMenu() {
 
 callsign=${callsignin//[$'\t\r\n']} && callsignin=${callsignin%%*( )}
 
-echo "Welcome to Simple Packet Web"
+echo "Welcome to Simple Packet Web - by PE1RRR Version ${Version}"
 echo "All requests are logged, inappropriate sites are blocked by OpenDNS FamilyShield"
 
 MainMenu
