@@ -96,6 +96,7 @@ function CheckURLSanity() {
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
 		ContentType=$($CurlBin -s -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
+		echo "Debug: $ContentType"
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
 			ReturnVal="Error: Sorry, that content is not text!"
@@ -114,8 +115,15 @@ function DownloadPage() {
 	local URL
 	URL=$1
 
+	# Sanity Check the URL
+	if ! CheckURLSanity "${URL}"
+	then 
+		echo $ReturnVal
+		unset ReturnVal
+		Begin # Again
+	fi
 
-	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+	Text=`$LynxBin -noredir -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
 
 	# Global
 	ReturnVal="${Text}"
@@ -208,7 +216,7 @@ function Prompt() {
 	URL=$1
 	RestartURL=$1
 	# Fetch the same URL used in display but only return with the links listed
-	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+	GetLinksOnly=`${LynxBin} -noredir -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
 
 	# Compile list of results into an array.
 	local Links
@@ -248,6 +256,7 @@ function Prompt() {
 	local ListCommandRegex
 	local BackCommandRegex
 	local NewCommandRegex
+	local MenuCommandRegex
 	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N|m|M)$)' # First Pass Regex
 	ListCommandRegex='^(l|L)$' # Second Pass
 	BackCommandRegex='^(B|b)$' # Second Pass
