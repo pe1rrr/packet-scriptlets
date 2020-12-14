@@ -57,8 +57,13 @@ export http_proxy=$myproxy
 #
 # Global Vars
 LinkRegex='[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
-QuitRegex='^(0|q|Q)$'
+QuitCommandRegex='^(0|q|Q)$'
+MenuCommandRegex='^(m|M)$' 
+ListCommandRegex='^(l|L)$'
+BackCommandRegex='^(B|b)$'
+NewCommandRegex='^(n|N)$'
 BackPage="none"
+Referrer="none"
 
 set -e
 trap 'catch $? $LINENO' EXIT
@@ -103,14 +108,18 @@ function CheckURLSanity() {
 function DownloadPage() {
         local Text
 	local URL
+	local ReferrerFunc
+	local ReferrerURL
 	URL=$1
+	ReferrerFunc=$2
+	ReferrerURL=$3
 
 	# Sanity Check the URL
 	if ! CheckURLSanity "${URL}"
 	then 
 		echo $ReturnVal
 		unset ReturnVal
-		Begin # Again
+		$ReferrerFunc "${ReferrerURL}"
 	fi
 
 	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
@@ -119,6 +128,10 @@ function DownloadPage() {
 	ReturnVal="${Text}"
 }
 
+function Quit() {
+	echo "Exiting... Bye!"
+	exit
+}
 
 function Begin() {
 	local Address
@@ -126,42 +139,33 @@ function Begin() {
 	local URLFix
 	local Text
 
-	echo "Enter a web address:"
+	Referrer="Begin"
+	echo "Enter a web address (Q = quit, M = main menu):"
 	read Address
-
 
 	# Trim Input
 	URLFix=${Address//[$'\t\r\n']} && Address=${Address%%*( )}
 
-	if [[ $Address =~ ^https?:\/\/ ]]
+	if [[ $URLFix =~ $QuitCommandRegex ]]
+	then
+		Quit
+		exit
+	elif [[ $URLFix =~ $MenuCommandRegex ]]
+	then
+		MainMenu
+	elif [[ $URLFix =~ ^https?:\/\/ ]]
 	then
 		URL="${URLFix}"
 	else
 		URL="http://${URLFix}"
-	fi	
-
-	echo "Requesting $URL..."
-
-	# Offer an escape
-        if [[ $URLFix =~ $QuitRegex ]]
-	then
-		echo "Exiting...Bye!"
-		exit
 	fi
 
-	# Sanity Check the URL
-	# Moved to DownloadPage
-	#if ! CheckURLSanity "${URL}"
-	#then 
-	#	echo $ReturnVal
-	#	unset ReturnVal
-	#	Begin # Again
-	#fi
+	echo "Requesting $URLFix..."
 
 	# Update Last Page Global
 	BackPage="${URL}"
 
-	GetPage "${URL}"
+	GetPage "${URL}" "Begin" "${URL}"
 
 	# Write Request to Log
 	LogUser "${Address}"
@@ -184,10 +188,14 @@ function DisplayPage() {
 
 function GetPage() {
 	local URL
+	local ReferrerFunc
+	local ReferrerURL
 	URL=$1
+	ReferrerFunc=$2
+	ReferrerURL=$3
 
 	# Generate Initial Page
-	DownloadPage "${URL}"
+	DownloadPage "${URL}" "${ReferrerFunc}" "${ReferrerURL}"
 	Text=$ReturnVal
 
 	# Display The Page
@@ -260,24 +268,16 @@ function Prompt() {
 
 	# Handle Link Choice
 	local LinkIDRegex
-	local ListCommandRegex
-	local BackCommandRegex
-	local NewCommandRegex
-	local MenuCommandRegex
 	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N|m|M)$)' # First Pass Regex
-	ListCommandRegex='^(l|L)$' # Second Pass
-	BackCommandRegex='^(B|b)$' # Second Pass
-	NewCommandRegex='^(n|N)$' # Second Pass
-	MenuCommandRegex='^(m|M)$' # Second Pass
 
 	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]  # First Pass
 	then
 		echo "Error: Oops! Invalid Link Number."
 		Prompt "${URL}" # Again
 		exit
-	elif [[ $LinkIDFix =~ $QuitRegex ]] # Second Pass
+	elif [[ $LinkIDFix =~ $QuitCommandRegex ]] # Second Pass
 	then
-		echo "Exiting...Bye!" # Escape
+		Quit
 		exit
 	elif [[ $LinkIDFix =~ $ListCommandRegex ]] # Second Pass
 	then
@@ -297,7 +297,7 @@ function Prompt() {
 			Prompt "${URL}" # Again
 			exit
 		else
-			GetPage "${BackPage}"
+			GetPage "${BackPage}" "Prompt" "${URL}"
 			Prompt "${BackPage}"
 		fi
 			
@@ -319,19 +319,10 @@ function Prompt() {
 		
 	unset Links # Just to be sure.
 
-	# Sometimes Lynx will return invalid/incompatible links in the list, so:
-	if ! CheckURLSanity "${LinkURL}" 
-	then 
-		echo $ReturnVal
-		unset ReturnVal
-		Prompt "${RestartURL}" # Again 
-		exit
-	fi
-
 	# Update Back-Page Global
 	BackPage="${LinkURL}"
 
-	GetPage "${LinkURL}"
+	GetPage "${LinkURL}" "Prompt" "${URL}"
 
 	LogUser "${LinkURL}"
 
@@ -374,9 +365,9 @@ function MainMenu() {
 	    exit
 	fi
 
-	if [[ $Selection =~ $QuitRegex ]]
+	if [[ $Selection =~ $QuitCommandRegex ]]
 	then
-		echo "Exiting... Bye!"
+		Quit
 		exit
 	fi
 
@@ -389,39 +380,39 @@ function MainMenu() {
 	elif [ $Selection -eq 100 ]
 	then
 		URL="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 101 ]
 	then
 		URL="https://rsgb.org"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 200 ]
 	then
 		URL="https://www.cdc.gov/coronavirus/2019-ncov/index.html"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 201 ]
 	then
 		URL="http://www.arrl.org"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 202 ]
 	then
 		URL="https://www.amsat.org"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 400 ]
 	then
 		URL="https://www.rijksoverheid.nl/onderwerpen/coronavirus-covid-19"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 401 ]
 	then
 		URL="https://veron.nl"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 402 ]
 	then
 		URL="https://www.VRZA.nl/wp"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 403 ]
 	then
 		URL="https://dares.nl"
-		GetPage "${URL}"
+		GetPage "${URL}" "MainMenu"
 	else
 		echo "Error: Sorry, you must make a selection from the menu!"
 		MainMenu
@@ -482,7 +473,8 @@ CallsignNOSSID=`echo ${Callsign} | cut -d'-' -f1`
 # Check Validity of callsign
 if ! CheckCallsign "${CallsignNOSSID}"
 then
-	echo "Error: Invalid Callsign... Exiting... Bye!"
+	echo "Error: Invalid Callsign..."
+	Quit
 	exit
 fi
 
