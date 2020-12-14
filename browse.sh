@@ -89,7 +89,6 @@ function CheckURLSanity() {
 	    return 1
 	fi
 
-	echo "Debug: $CheckURL Check"
 	# Ignore case with ,, below
 	if [[ ${CheckURL,,} =~ ^(gopher:|mailto:|ftp:|file:).*$ ]]
 	then
@@ -99,7 +98,6 @@ function CheckURLSanity() {
 
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
 		ContentType=$($CurlBin -s -L -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
-		echo "Debug: $ContentType"
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
