@@ -82,10 +82,19 @@ function CheckURLSanity() {
 	local ContentType
 	local ContentTypeRegex
 
-	if ! [[ $CheckURL =~ $LinkRegex ]]
+	# Ignore case with ,, below
+	if ! [[ ${CheckURL,,} =~ $LinkRegex ]]
 	then 
-	    ReturnVal="Error: Address not valid"
+	    ReturnVal="Error: Address provided is not a valid URL"
 	    return 1
+	fi
+
+	echo "Debug: $CheckURL Check"
+	# Ignore case with ,, below
+	if [[ ${CheckURL,,} =~ ^(gopher:|mailto:|ftp:|file:).*$ ]]
+	then
+		ReturnVal="Error: That type of URL is not allowed. Supported: http or https."
+		return 1
 	fi
 
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
