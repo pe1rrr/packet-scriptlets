@@ -160,7 +160,7 @@ function Begin() {
 		URL="http://${URLFix}"
 	fi
 
-	echo "Requesting $URLFix..."
+	echo "Requesting ${URL}..."
 
 	# Update Last Page Global
 	BackPage="${URL}"
