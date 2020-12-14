@@ -351,6 +351,7 @@ function GetPage() {
 
 function MainMenu() {
 	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
+	echo ""
 	echo "[1] Enter your own web address"
 	echo ""
 	echo "Bookmarks"
@@ -488,5 +489,5 @@ then
 	exit
 fi
 
-WelcomeMsg
+WelcomeMsg "${CallsignNOSSID}"
 MainMenu
