@@ -56,7 +56,7 @@ export http_proxy=$myproxy
 ##### End of Config - Do not change anything below here.
 #
 # Global Vars
-LinkRegex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+LinkRegex='[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
 QuitRegex='^(0|q|Q)$'
 BackPage="none"
 
@@ -84,9 +84,9 @@ function CheckURLSanity() {
 	fi
 
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
-		ContentType=$($CurlBin -s -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
-		ContentTypeRegex='^(text\/html|text\/plain).*$'
+		ContentType=$($CurlBin -s -L -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
 		echo "Debug: $ContentType"
+		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
 			ReturnVal="Error: Sorry, that content is not text!"
@@ -113,7 +113,7 @@ function DownloadPage() {
 		Begin # Again
 	fi
 
-	Text=`$LynxBin -noredir -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
 
 	# Global
 	ReturnVal="${Text}"
@@ -126,14 +126,21 @@ function Begin() {
 	local URLFix
 	local Text
 
-	printf "Enter a web address (Q = quit) : http://"
+	echo "Enter a web address:"
 	read Address
+
 
 	# Trim Input
 	URLFix=${Address//[$'\t\r\n']} && Address=${Address%%*( )}
 
-	# Force http regardless.
-	URL="http://${URLFix}"
+	if [[ $Address =~ ^https?:\/\/ ]]
+	then
+		URL="${URLFix}"
+	else
+		URL="http://${URLFix}"
+	fi	
+
+	echo "Requesting $URL..."
 
 	# Offer an escape
         if [[ $URLFix =~ $QuitRegex ]]
@@ -143,25 +150,18 @@ function Begin() {
 	fi
 
 	# Sanity Check the URL
-	if ! CheckURLSanity "${URL}"
-	then 
-		echo $ReturnVal
-		unset ReturnVal
-		Begin # Again
-	fi
+	# Moved to DownloadPage
+	#if ! CheckURLSanity "${URL}"
+	#then 
+	#	echo $ReturnVal
+	#	unset ReturnVal
+	#	Begin # Again
+	#fi
 
 	# Update Last Page Global
 	BackPage="${URL}"
 
-	# Generate Initial Page
-	DownloadPage "${URL}"
-	Text=$ReturnVal
-
-	# Display The Page
-	DisplayPage "${URL}" "${Text}"
-
-	# Clear Global
-	unset ReturnVal
+	GetPage "${URL}"
 
 	# Write Request to Log
 	LogUser "${Address}"
@@ -180,6 +180,23 @@ function DisplayPage() {
 	echo -e "${Text}"
 	echo -e "The previous page was: ${BackPage}"
 	return 0
+}
+
+function GetPage() {
+	local URL
+	URL=$1
+
+	# Generate Initial Page
+	DownloadPage "${URL}"
+	Text=$ReturnVal
+
+	# Display The Page
+	DisplayPage "${URL}" "${Text}"
+
+	# Clear Global
+	unset ReturnVal
+
+	Prompt "${URL}"
 }
 
 function LogUser() {
@@ -206,7 +223,7 @@ function Prompt() {
 	URL=$1
 	RestartURL=$1
 	# Fetch the same URL used in display but only return with the links listed
-	GetLinksOnly=`${LynxBin} -noredir -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
 
 	# Compile list of results into an array.
 	local Links
@@ -302,52 +319,27 @@ function Prompt() {
 		
 	unset Links # Just to be sure.
 
+	# Sometimes Lynx will return invalid/incompatible links in the list, so:
 	if ! CheckURLSanity "${LinkURL}" 
 	then 
 		echo $ReturnVal
 		unset ReturnVal
-		Prompt "${RestartURL}" # Again - might not work!
+		Prompt "${RestartURL}" # Again 
 		exit
 	fi
 
 	# Update Back-Page Global
 	BackPage="${LinkURL}"
 
-	DownloadPage "${LinkURL}"
-
-	Text="${ReturnVal}"
-
-	DisplayPage "${LinkURL}" "${Text}"
-
-	# Clear up Global
-	unset ReturnVal
+	GetPage "${LinkURL}"
 
 	LogUser "${LinkURL}"
-
-	# Register a Back-Page in Global
-	BackPage="${LinkURL}"
 
 	# Loop Back
 	Prompt "${LinkURL}"
 
 }
 
-function GetPage() {
-	local URL
-	URL=$1
-
-	# Generate Initial Page
-	DownloadPage "${URL}"
-	Text=$ReturnVal
-
-	# Display The Page
-	DisplayPage "${URL}" "${Text}"
-
-	# Clear Global
-	unset ReturnVal
-
-	Prompt "${URL}"
-}
 
 function MainMenu() {
 	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
@@ -400,7 +392,7 @@ function MainMenu() {
 		GetPage "${URL}"
 	elif [ $Selection -eq 101 ]
 	then
-		URL="http://rsgb.org"
+		URL="https://rsgb.org"
 		GetPage "${URL}"
 	elif [ $Selection -eq 200 ]
 	then
@@ -408,11 +400,11 @@ function MainMenu() {
 		GetPage "${URL}"
 	elif [ $Selection -eq 201 ]
 	then
-		URL="http://arrl.org"
+		URL="http://www.arrl.org"
 		GetPage "${URL}"
 	elif [ $Selection -eq 202 ]
 	then
-		URL="http://amsat.org"
+		URL="https://www.amsat.org"
 		GetPage "${URL}"
 	elif [ $Selection -eq 400 ]
 	then
@@ -420,15 +412,15 @@ function MainMenu() {
 		GetPage "${URL}"
 	elif [ $Selection -eq 401 ]
 	then
-		URL="http://veron.nl"
+		URL="https://veron.nl"
 		GetPage "${URL}"
 	elif [ $Selection -eq 402 ]
 	then
-		URL="http://VRZA.nl"
+		URL="https://www.VRZA.nl/wp"
 		GetPage "${URL}"
 	elif [ $Selection -eq 403 ]
 	then
-		URL="http://DARES.nl"
+		URL="https://dares.nl"
 		GetPage "${URL}"
 	else
 		echo "Error: Sorry, you must make a selection from the menu!"
@@ -455,7 +447,6 @@ function CheckCallsign() {
 
 	if [[ $Call =~ $CallsignRegex ]] 
 	then
-		echo "Debug: ok"
 		return 0
 	else
 		return 1
@@ -465,6 +456,12 @@ function CheckCallsign() {
 
 # Inetd Connectivity- BPQ Node Connect and Telnet IP connect are handled differently.
 Client=$1
+if [ -z $Client ] 
+then
+	echo "Misconfigured, please ensure this script is called with the 'client <ip/ax25>' argument from inetd"
+	exit
+	fi
+
 if [ ${Client} == "ip" ]
 then
 	# Connection from 2nd param of inetd after 'client' on 'ip' port so standard telnet user is prompted for a callsign.
