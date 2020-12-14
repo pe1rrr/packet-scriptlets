@@ -115,7 +115,7 @@ function DownloadPage() {
 	URL=$1
 
 
-	Text=`$LynxBin -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
 
 	# Global
 	ReturnVal="${Text}"
@@ -208,7 +208,7 @@ function Prompt() {
 	URL=$1
 	RestartURL=$1
 	# Fetch the same URL used in display but only return with the links listed
-	GetLinksOnly=`${LynxBin} -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
 
 	# Compile list of results into an array.
 	local Links
@@ -236,7 +236,7 @@ function Prompt() {
 
 	# Prompt
 	local LinkID
-	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link)"
+	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link, M = main menu)"
 	read LinkID
 
 	# Trim Input
@@ -248,10 +248,11 @@ function Prompt() {
 	local ListCommandRegex
 	local BackCommandRegex
 	local NewCommandRegex
-	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N)$)' # First Pass Regex
+	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N|m|M)$)' # First Pass Regex
 	ListCommandRegex='^(l|L)$' # Second Pass
 	BackCommandRegex='^(B|b)$' # Second Pass
 	NewCommandRegex='^(n|N)$' # Second Pass
+	MenuCommandRegex='^(m|M)$' # Second Pass
 
 	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]  # First Pass
 	then
@@ -270,6 +271,9 @@ function Prompt() {
 	elif [[ $LinkIDFix =~ $NewCommandRegex ]] # Second Pass
 	then
 		Begin
+	elif [[ $LinkIDFix =~ $MenuCommandRegex ]] # Second Pass
+	then
+		MainMenu
 	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
 	then
 		if [[ ${BackPage} == "none" ]]
@@ -349,9 +353,15 @@ function GetPage() {
 function MainMenu() {
 	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
 	echo "[1] Enter your own web address"
+	echo ""
+	echo "Bookmarks"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[200] COVID Information CDC (US & Canada)"
 	echo "[400] COVID Information Rijksoverheid (Netherlands)"
+	echo ""
+	echo "[101] RSGB.org"
+	echo "[201] ARRL.org [202] AMSAT.org"
+	echo "[401] Veron.nl [402] VRZA.nl [403] DARES"
 
 	echo "Enter Choice: (Q = quit)"
 
@@ -388,13 +398,37 @@ function MainMenu() {
 	then
 		URL="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
 		GetPage "${URL}"
+	elif [ $Selection -eq 101 ]
+	then
+		URL="http://rsgb.org"
+		GetPage "${URL}"
 	elif [ $Selection -eq 200 ]
 	then
 		URL="https://www.cdc.gov/coronavirus/2019-ncov/index.html"
 		GetPage "${URL}"
+	elif [ $Selection -eq 201 ]
+	then
+		URL="http://arrl.org"
+		GetPage "${URL}"
+	elif [ $Selection -eq 202 ]
+	then
+		URL="http://amsat.org"
+		GetPage "${URL}"
 	elif [ $Selection -eq 400 ]
 	then
 		URL="https://www.rijksoverheid.nl/onderwerpen/coronavirus-covid-19"
+		GetPage "${URL}"
+	elif [ $Selection -eq 401 ]
+	then
+		URL="http://veron.nl"
+		GetPage "${URL}"
+	elif [ $Selection -eq 402 ]
+	then
+		URL="http://VRZA.nl"
+		GetPage "${URL}"
+	elif [ $Selection -eq 403 ]
+	then
+		URL="http://DARES.nl"
 		GetPage "${URL}"
 	else
 		echo "Error: Sorry, you must make a selection from the menu!"
