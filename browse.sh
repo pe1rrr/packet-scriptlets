@@ -69,16 +69,6 @@ catch() {
       fi
  }
 
-if [ "$1" == "ip" ]
-then
-	# Connection from 2nd param of inetd after 'client' on 'ip' port so standard telnet user is prompted for a callsign.
-	echo "Please enter your callsign:"
-	read callsignin
-elif	[ "$1" == "ax25" ]
-then
-	# Connection came from a linbpq client on 'ax25' port which by default sends callsign on connect.
-	read callsignin
-fi
 
 
 
@@ -447,14 +437,56 @@ function MainMenu() {
 
 }
 
+function WelcomeMsg() {
+	local Callsign
+	Callsign=$1
+	echo "Hello ${Callsign}, welcome to Simple Packet Web - by PE1RRR Version ${Version}"
+	echo "All requests are logged, inappropriate sites are blocked by OpenDNS FamilyShield"
+	return 0
+}
 
-# Trim whitespaces and newlines from the callsign but not necessarily verify it is sane (its only for logging).
-# I should probably do full sanitization here, although the callsign is passed from BPQ itself automatically
-# if you decide to run this script and expose direct access to it via telnet one could put any garbage in..
+function CheckCallsign() {
+	local Call
+	local CallsignRegex
 
-callsign=${callsignin//[$'\t\r\n']} && callsignin=${callsignin%%*( )}
+	Call=$1
+	CallsignRegex="[a-zA-Z0-9]{1,3}[0123456789][a-zA-Z0-9]{0,3}[a-zA-Z]"
 
-echo "Welcome to Simple Packet Web - by PE1RRR Version ${Version}"
-echo "All requests are logged, inappropriate sites are blocked by OpenDNS FamilyShield"
+	if [[ $Call =~ $CallsignRegex ]] 
+	then
+		echo "Debug: ok"
+		return 0
+	else
+		return 1
+	fi
+}
 
+
+# Inetd Connectivity- BPQ Node Connect and Telnet IP connect are handled differently.
+Client=$1
+if [ ${Client} == "ip" ]
+then
+	# Connection from 2nd param of inetd after 'client' on 'ip' port so standard telnet user is prompted for a callsign.
+	echo "Please enter your callsign:"
+	read CallsignIn
+elif	[ ${Client} == "ax25" ]
+then
+	# Connection came from a linbpq client on 'ax25' port which by default sends callsign on connect.
+	read CallsignIn
+fi
+
+# Trim BPQ-Term added CRs and Newlines.
+Callsign=${CallsignIn//[$'\t\r\n']} && CallsignIn=${CallsignIn%%*( )}
+# Get rid of SSIDs
+CallsignNOSSID=`echo ${Callsign} | cut -d'-' -f1`
+
+
+# Check Validity of callsign
+if ! CheckCallsign "${CallsignNOSSID}"
+then
+	echo "Error: Invalid Callsign... Exiting... Bye!"
+	exit
+fi
+
+WelcomeMsg
 MainMenu
