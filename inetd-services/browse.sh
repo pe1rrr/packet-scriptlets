@@ -1,12 +1,12 @@
 #!/bin/bash 
-# Version 0.2.1 PE1RRR WEB Portal for Packet
+# Version 0.2.3 PE1RRR WEB Portal for Packet
 #
 # Configuration
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.1"
+Version="0.2.3"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -178,7 +178,7 @@ function Begin() {
 	# Write Request to Log
 	LogUser "${Address}"
 
-	Prompt "${URL}"
+	ParseLinks "${URL}"
 }
 
 function DisplayPage() {
@@ -212,7 +212,7 @@ function GetPage() {
 	# Clear Global
 	unset ReturnVal
 
-	Prompt "${URL}"
+	ParseLinks "${URL}"
 }
 
 function LogUser() {
@@ -229,41 +229,65 @@ function LogUser() {
 	echo "${Date}: ${Callsign} requested ${URL}" >> ${WebLogFile}
 }
 
+function GetLinks() {
+	local GetLinksOnly
+	local URL
 
+	URL=$1
+	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+	ReturnVal=$GetLinksOnly
+}
 
-function Prompt() {
+function ParseLinks() {
 	local URL
 	local GetLinksOnly
 	local RestartURL
+	# Reinit/Zero these Vars
+	local Links
+	local LinkList
 
 	URL=$1
 	RestartURL=$1
+
+	# TODO: 
 	# Fetch the same URL used in display but only return with the links listed
-	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+	# Test if Links has already been set by a looping directive later in this function
+        # as it can take a while to regenerate a list and we'd rather not do it more than once.
+
+
+	GetLinks "${URL}"
+	GetLinksOnly=$ReturnVal
+	unset ReturnVal
+	declare -A Links # I'm an associative array!
 
 	# Compile list of results into an array.
-	local Links
 	local IndexRegex
+	local HttpRegex
+	local OldIFS
+	OldIFS=$IFS
+	IFS=$'\n'
+
+
+	# SOME Pages will return links that Lynx will skip over yet still increments the Lynx link number displayed...
+	# This logic sets the links into an array where the index of the array is identical to the link number Lynx displayed.
 	for Results in ${GetLinksOnly}
 	do
-		IndexRegex='^[0-9\.]+$'
-		if  ! [[ $Results =~ $IndexRegex ]]
+		IndexRegex='^((\ )+|)+([0-9]+)' # Bleugh
+		HttpRegex='(https?.*)' # Barf
+		[[ $Results =~ $IndexRegex ]] && IndexID=`echo ${BASH_REMATCH[0]} | xargs`  # Trim the whitepaces
+		[[ $Results =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
+		if ! [ -z $IndexID ] # There's always one, grrr. Lynx returns a line "References" before the link list...
 		then
-			Links+=("$Results")
+			#echo "Debug: $IndexID = $HttpURL"
+			Links[$IndexID]=$HttpURL
+			# Build the human readable list of links
+			LinkList+="$IndexID = $HttpURL\n"
+
 		fi
 	done
-
-	# Build the human readable list of links
-	local Count
-	local LinkList
-	local Value
-	Count=0
-	for Value in "${Links[@]}"
-	do
-		     LinkList+="Link $Count = $Value \n"
-		     Count=$((Count+1))
-        done
-
+	IFS=$OldIFS
+	
+	LinkCount=${#Links[*]}
 
 	# Prompt
 	local LinkID
@@ -284,9 +308,21 @@ function Prompt() {
 		exit
 	elif [[ $LinkIDFix =~ $ListCommandRegex ]] 
 	then
+		if [ $LinkCount -gt 30 ]
+		then 
+			echo "The link list is ${LinkCount} lines long, are you sure you want to continue? (Y/n)"
+			read AskThem
+			if ! [[ $AskThem =~ ^(Y|y)$ ]]
+			then
+				echo "Okay lets not do that then..."
+				unset Links
+				unset LinkList
+				MainMenu
+			fi
+		fi
 		echo -e ${LinkList} # Display Links
-		unset Links # Kill the String to prevent looping additions.
-		Prompt "${URL}"# Again
+		unset Links # Kill the Array to prevent collisions on the next loop.
+		ParseLinks "${URL}"# Again
 	elif [[ $LinkIDFix =~ $NewCommandRegex ]] 
 	then
 		Begin
@@ -297,11 +333,11 @@ function Prompt() {
 	then
 		if [[ ${BackPage} == "none" ]]
 		then
-			Prompt "${URL}" # Again
+			ParseLinks "${URL}" # Again
 			exit
 		else
-			GetPage "${BackPage}" "Prompt" "${URL}"
-			Prompt "${BackPage}"
+			GetPage "${BackPage}" "ParseLinks" "${URL}"
+			ParseLinks "${BackPage}"
 		fi
 	elif  [[ $LinkIDFix =~ $LinkIDRegex ]] 
 	then
@@ -314,7 +350,7 @@ function Prompt() {
 		then 
 		    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
 		    unset Links
-		    Prompt "${RestartURL}" # Again
+		    ParseLinks "${RestartURL}" # Again
 		    exit
 		fi
 		
@@ -323,15 +359,15 @@ function Prompt() {
 		# Update Back-Page Global
 		BackPage="${LinkURL}"
 
-		GetPage "${LinkURL}" "Prompt" "${URL}"
+		GetPage "${LinkURL}" "ParseLinks" "${URL}"
 
 		LogUser "${LinkURL}"
 
 		# Loop Back
-		Prompt "${LinkURL}"
+		ParseLinks "${LinkURL}"
 	else
 		echo "Error: Oops! Invalid Link Number."
-		Prompt "${URL}" # Again
+		ParseLinks "${URL}" # Again
 		exit
 	fi
 
