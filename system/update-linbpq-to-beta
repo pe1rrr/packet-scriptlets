@@ -7,16 +7,22 @@
 # This can be the same as the default directory where the main linbpq config files are kept
 #
 # However this script is designed to allow a common binary path so more than one node can
-# run from the same binary, hence the /home/bpq/bpqbin/ directory. The node config files are stored
-# in /home/bpq/nodes/<callsign>/ where the binary 'pilinbpq' is a symbolic link to the actual
-# binary in /home/bpq/bpqbin/, the name of the symlink is also the callsign of the node.
-# To set that up, go to the /home/bpq/nodes/<callsign>/ directory and issue:
-# ln -s /home/bpq/bpqbin/pilinbpq <callsign>
+# run from the same binary, hence the /home/pi/bpqbin/ directory. The node config files are stored
+# in /home/pi/nodes/<callsign>/ where the binary 'pilinbpq' is a symbolic link to another symbolic
+# link within the /home/pi/bpqbin directory that gets updated in turn to point to the the actual
+# binary in /home/pi/bpqbin/, this is how the previous versions of the binary are kept aside for
+# emergency rollback. 
 #
-# E.g. cd /home/bpq/nodes/pe1rrr ; ln -s /home/bpq/bpqbin/pilinbpq pe1rrr
+# Incidentally, the file name of the symlink from the node config directory
+# is also the callsign of the node. This allows the running processs to be referenced by callsign.
+#
+# To set that up, go to the /home/pi/nodes/<callsign>/ directory and issue:
+# ln -s /home/pi/bpqbin/pilinbpq <callsign>
+#
+# E.g. cd /home/pi/nodes/pe1rrr ; ln -s /home/pi/bpqbin/pilinbpq pe1rrr
 #
 # Set the path to the binary storage here
-bpqbin=/home/bpq/bpqbin
+bpqbin=/home/pi/bpqbin
 # Name of binary to pull as well as use
 binary=pilinbpq
 # WWW path to download
@@ -27,12 +33,12 @@ bpqwww="http://www.cantab.net/users/john.wiseman/Downloads/Beta/${binary}"
 # This script pulls the latest file from the Beta build system of G8BPQ, and then
 # stores the previous versions with file dates and version numbers in the filename
 # in case something has been broken in a beta build and you need to roll back.
-# Rolling back is simple, unlinking the /home/bpq/bpqbin/pilinkbpq from the
+# Rolling back is simple, unlinking the /home/pi/bpqbin/pilinbpq from the
 # current version (ls -l will show you which one it is linked to), and then
 # re-linking one of the older versions to the pilinbpq symbolic link.
 #
 # e.g 
-#  cd /home/bpq/bpqbin ; ls -l
+#  cd /home/pi/bpqbin ; ls -l
 #  unlink pilinbpq
 #  ln -s pilinbpq.<filedate>.<version> pilinbpq
 # 
@@ -46,7 +52,7 @@ bpqwww="http://www.cantab.net/users/john.wiseman/Downloads/Beta/${binary}"
 # Alternatively, one is included in the github repository with this update script.
 #
 # Don't forget to update the file that the systemd script calls in 
-# /home/bpq/nodes/<callsign>/runbpq to make sure the paths are correct.
+# /home/pi/nodes/<callsign>/runbpq to make sure the paths are correct.
 
 #### End of Settings
 
