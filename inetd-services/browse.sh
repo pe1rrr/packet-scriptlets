@@ -178,7 +178,7 @@ function Begin() {
 	# Write Request to Log
 	LogUser "${Address}"
 
-	ParseLinks "${URL}"
+	Prompt "${URL}"
 }
 
 function DisplayPage() {
@@ -212,7 +212,7 @@ function GetPage() {
 	# Clear Global
 	unset ReturnVal
 
-	ParseLinks "${URL}"
+	Prompt "${URL}"
 }
 
 function LogUser() {
@@ -238,7 +238,7 @@ function GetLinks() {
 	ReturnVal=$GetLinksOnly
 }
 
-function ParseLinks() {
+function Prompt() {
 	local URL
 	local GetLinksOnly
 	local RestartURL
@@ -270,6 +270,7 @@ function ParseLinks() {
 
 	# SOME Pages will return links that Lynx will skip over yet still increments the Lynx link number displayed...
 	# This logic sets the links into an array where the index of the array is identical to the link number Lynx displayed.
+	
 	for Results in ${GetLinksOnly}
 	do
 		IndexRegex='^((\ )+|)+([0-9]+)' # Bleugh
@@ -322,7 +323,7 @@ function ParseLinks() {
 		fi
 		echo -e ${LinkList} # Display Links
 		unset Links # Kill the Array to prevent collisions on the next loop.
-		ParseLinks "${URL}"# Again
+		Prompt "${URL}"# Again
 	elif [[ $LinkIDFix =~ $NewCommandRegex ]] 
 	then
 		Begin
@@ -333,11 +334,11 @@ function ParseLinks() {
 	then
 		if [[ ${BackPage} == "none" ]]
 		then
-			ParseLinks "${URL}" # Again
+			Prompt "${URL}" # Again
 			exit
 		else
-			GetPage "${BackPage}" "ParseLinks" "${URL}"
-			ParseLinks "${BackPage}"
+			GetPage "${BackPage}" "Prompt" "${URL}"
+			Prompt "${BackPage}"
 		fi
 	elif  [[ $LinkIDFix =~ $LinkIDRegex ]] 
 	then
@@ -350,7 +351,7 @@ function ParseLinks() {
 		then 
 		    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
 		    unset Links
-		    ParseLinks "${RestartURL}" # Again
+		    Prompt "${RestartURL}" # Again
 		    exit
 		fi
 		
@@ -359,15 +360,15 @@ function ParseLinks() {
 		# Update Back-Page Global
 		BackPage="${LinkURL}"
 
-		GetPage "${LinkURL}" "ParseLinks" "${URL}"
+		GetPage "${LinkURL}" "Prompt" "${URL}"
 
 		LogUser "${LinkURL}"
 
 		# Loop Back
-		ParseLinks "${LinkURL}"
+		Prompt "${LinkURL}"
 	else
 		echo "Error: Oops! Invalid Link Number."
-		ParseLinks "${URL}" # Again
+		Prompt "${URL}" # Again
 		exit
 	fi
 
