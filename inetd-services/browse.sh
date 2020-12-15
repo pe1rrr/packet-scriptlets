@@ -1,12 +1,12 @@
 #!/bin/bash 
-# Version 0.2 PE1RRR WEB Portal for Packet
+# Version 0.2.1 PE1RRR WEB Portal for Packet
 #
 # Configuration
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2"
+Version="0.2.1"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -97,7 +97,8 @@ function CheckURLSanity() {
 	fi
 
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
-		ContentType=$($CurlBin -s -L -I -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
+		ContentType=$($CurlBin -s -L -I --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
+		echo "Debug: $ContentType"
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
@@ -275,26 +276,21 @@ function Prompt() {
 
 	# Handle Link Choice
 	local LinkIDRegex
-	LinkIDRegex='(^([0-9])+$|^(l|L|q|b|B|Q|n|N|m|M)$)' # First Pass Regex
+	LinkIDRegex='^([0-9])+$' 
 
-	if ! [[ $LinkIDFix =~ $LinkIDRegex ]]  # First Pass
-	then
-		echo "Error: Oops! Invalid Link Number."
-		Prompt "${URL}" # Again
-		exit
-	elif [[ $LinkIDFix =~ $QuitCommandRegex ]] # Second Pass
+	if [[ $LinkIDFix =~ $QuitCommandRegex ]] 
 	then
 		Quit
 		exit
-	elif [[ $LinkIDFix =~ $ListCommandRegex ]] # Second Pass
+	elif [[ $LinkIDFix =~ $ListCommandRegex ]] 
 	then
 		echo -e ${LinkList} # Display Links
 		unset Links # Kill the String to prevent looping additions.
 		Prompt "${URL}"# Again
-	elif [[ $LinkIDFix =~ $NewCommandRegex ]] # Second Pass
+	elif [[ $LinkIDFix =~ $NewCommandRegex ]] 
 	then
 		Begin
-	elif [[ $LinkIDFix =~ $MenuCommandRegex ]] # Second Pass
+	elif [[ $LinkIDFix =~ $MenuCommandRegex ]] 
 	then
 		MainMenu
 	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
@@ -307,34 +303,37 @@ function Prompt() {
 			GetPage "${BackPage}" "Prompt" "${URL}"
 			Prompt "${BackPage}"
 		fi
-			
-	fi
+	elif  [[ $LinkIDFix =~ $LinkIDRegex ]] 
+	then
+		# So an actual link ID has been requested...
+		# LinkRegex is Global
+		local LinkURL 
 
-
-	# So an actual link ID has been requested...
-	# LinkRegex is Global
-	local LinkURL 
-
-	LinkURL=${Links[${LinkIDFix}]}
-	if ! [[ $LinkURL =~ $LinkRegex ]]
-	then 
-	    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
-	    unset Links
-	    Prompt "${RestartURL}" # Again
-	    exit
-	fi
+		LinkURL=${Links[${LinkIDFix}]}
+		if ! [[ $LinkURL =~ $LinkRegex ]]
+		then 
+		    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
+		    unset Links
+		    Prompt "${RestartURL}" # Again
+		    exit
+		fi
 		
-	unset Links # Just to be sure.
+		unset Links # Just to be sure.
 
-	# Update Back-Page Global
-	BackPage="${LinkURL}"
+		# Update Back-Page Global
+		BackPage="${LinkURL}"
 
-	GetPage "${LinkURL}" "Prompt" "${URL}"
+		GetPage "${LinkURL}" "Prompt" "${URL}"
 
-	LogUser "${LinkURL}"
+		LogUser "${LinkURL}"
 
-	# Loop Back
-	Prompt "${LinkURL}"
+		# Loop Back
+		Prompt "${LinkURL}"
+	else
+		echo "Error: Oops! Invalid Link Number."
+		Prompt "${URL}" # Again
+		exit
+	fi
 
 }
 
