@@ -63,6 +63,7 @@ ListCommandRegex='^(l|L)$'
 BackCommandRegex='^(B|b)$'
 NewCommandRegex='^(n|N)$'
 RedisplayCommandRegex='^(r|R)$'
+WarningLimit=30
 BackPage="none"
 Referrer="none"
 declare -A GlobalLinksArray # I'm an associative array!
@@ -173,6 +174,27 @@ function GetPage() {
 	Links=$GlobalLinks # Global Conversion
 
 	# Display The Page
+	LineCount=0
+	OldIFS=$IFS
+	IFS='\n'
+	for i in $Text
+	do
+		LineCount=$((LineCount+1))
+	done
+	IFS=$OldIFS
+
+	if [ $LineCount -gt $WarningLimit ]
+	then
+		echo "This page is ${LineCount} lines long, are you sure you want to continue? (Y/n)"
+			local AskThem
+			read AskThem
+			if ! [[ $AskThem =~ ^(Y|y)$ ]]
+			then
+				echo "Okay lets not do that then..."
+				Prompt "${URL}"
+			fi
+	fi
+
 	echo -e "Displaying ${URL}"
 	echo -e "${Text}"
 	echo -e "The previous page was: ${BackPage}"
@@ -275,7 +297,7 @@ function Prompt() {
 	elif [[ $LinkIDFix =~ $ListCommandRegex ]] 
 	then
 		LinkCount=${#GlobalLinksArray[*]}
-		if [ $LinkCount -gt 30 ]
+		if [ $LinkCount -gt $WarningLimit ]
 		then 
 			echo "The link list is ${LinkCount} lines long, are you sure you want to continue? (Y/n)"
 			local AskThem
@@ -359,7 +381,7 @@ function MainMenu() {
 	echo "[400] COVID Information Rijksoverheid (Netherlands)"
 	echo ""
 	echo "[101] RSGB.org"
-	echo "[201] ARRL.org [202] AMSAT.org"
+	echo "[202] AMSAT.org"
 	echo "[401] Veron.nl [402] VRZA.nl [403] DARES"
 
 	echo "Enter Choice: (Q = quit)"
@@ -404,10 +426,6 @@ function MainMenu() {
 	elif [ $Selection -eq 200 ]
 	then
 		URL="https://www.cdc.gov/coronavirus/2019-ncov/index.html"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 201 ]
-	then
-		URL="http://www.arrl.org"
 		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 202 ]
 	then
