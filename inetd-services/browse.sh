@@ -1,12 +1,12 @@
 #!/bin/bash 
-# Version 0.2.3 PE1RRR WEB Portal for Packet
+# Version 0.2.4 PE1RRR WEB Portal for Packet
 #
 # Configuration
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.3"
+Version="0.2.4"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -62,8 +62,10 @@ MenuCommandRegex='^(m|M)$'
 ListCommandRegex='^(l|L)$'
 BackCommandRegex='^(B|b)$'
 NewCommandRegex='^(n|N)$'
+RedisplayCommandRegex='^(r|R)$'
 BackPage="none"
 Referrer="none"
+declare -A GlobalLinksArray # I'm an associative array!
 
 set -e
 trap 'catch $? $LINENO' EXIT
@@ -98,7 +100,7 @@ function CheckURLSanity() {
 
 	if $CurlBin --output /dev/null --silent --head --fail "${CheckURL}"; then
 		ContentType=$($CurlBin -s -L -I --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
-		echo "Debug: $ContentType"
+		echo "Content: $ContentType"
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
@@ -111,29 +113,6 @@ function CheckURLSanity() {
 		return 1
 	fi	
 
-}
-
-function DownloadPage() {
-        local Text
-	local URL
-	local ReferrerFunc
-	local ReferrerURL
-	URL=$1
-	ReferrerFunc=$2
-	ReferrerURL=$3
-
-	# Sanity Check the URL
-	if ! CheckURLSanity "${URL}"
-	then 
-		echo $ReturnVal
-		unset ReturnVal
-		$ReferrerFunc "${ReferrerURL}"
-	fi
-
-	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
-
-	# Global
-	ReturnVal="${Text}"
 }
 
 function Quit() {
@@ -173,46 +152,33 @@ function Begin() {
 	# Update Last Page Global
 	BackPage="${URL}"
 
-	GetPage "${URL}" "Begin" "${URL}"
-
-	# Write Request to Log
 	LogUser "${Address}"
-
-	Prompt "${URL}"
-}
-
-function DisplayPage() {
-	local URL
-	local Text
-
-	URL=$1
-	Text=$2
-
-	echo -e "Displaying ${URL}"
-	echo -e "${Text}"
-	echo -e "The previous page was: ${BackPage}"
-	return 0
+	GetPage "${URL}" "Begin" "${URL}"
 }
 
 function GetPage() {
 	local URL
 	local ReferrerFunc
 	local ReferrerURL
+	local Links
+
 	URL=$1
 	ReferrerFunc=$2
 	ReferrerURL=$3
 
 	# Generate Initial Page
+	echo "One moment please..."
 	DownloadPage "${URL}" "${ReferrerFunc}" "${ReferrerURL}"
-	Text=$ReturnVal
+	Text=$GlobalText # Global Conversion
+	Links=$GlobalLinks # Global Conversion
 
 	# Display The Page
-	DisplayPage "${URL}" "${Text}"
+	echo -e "Displaying ${URL}"
+	echo -e "${Text}"
+	echo -e "The previous page was: ${BackPage}"
 
-	# Clear Global
-	unset ReturnVal
-
-	Prompt "${URL}"
+	# Prompt Menu
+	Prompt "${URL}" 
 }
 
 function LogUser() {
@@ -229,49 +195,39 @@ function LogUser() {
 	echo "${Date}: ${Callsign} requested ${URL}" >> ${WebLogFile}
 }
 
-function GetLinks() {
-	local GetLinksOnly
+function DownloadPage() {
 	local URL
-
+	local ReferrerFunc
+	local ReferrerURL
 	URL=$1
-	GetLinksOnly=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
-	ReturnVal=$GetLinksOnly
-}
+	ReferrerFunc=$2
+	ReferrerURL=$3
 
-function Prompt() {
-	local URL
-	local GetLinksOnly
-	local RestartURL
-	# Reinit/Zero these Vars
+	# Sanity Check the URL
+	if ! CheckURLSanity "${URL}"
+	then 
+		echo $ReturnVal
+		unset ReturnVal
+		$ReferrerFunc "${ReferrerURL}"
+	fi
+
+        local Text
+	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+
 	local Links
-	local LinkList
-
-	URL=$1
-	RestartURL=$1
-
-	# TODO: 
-	# Fetch the same URL used in display but only return with the links listed
-	# Test if Links has already been set by a looping directive later in this function
-        # as it can take a while to regenerate a list and we'd rather not do it more than once.
-
-
-	GetLinks "${URL}"
-	GetLinksOnly=$ReturnVal
-	unset ReturnVal
-	declare -A Links # I'm an associative array!
+	Links=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
 
 	# Compile list of results into an array.
-	local IndexRegex
-	local HttpRegex
 	local OldIFS
 	OldIFS=$IFS
 	IFS=$'\n'
 
-
 	# SOME Pages will return links that Lynx will skip over yet still increments the Lynx link number displayed...
 	# This logic sets the links into an array where the index of the array is identical to the link number Lynx displayed.
-	
-	for Results in ${GetLinksOnly}
+	local IndexRegex
+	local HttpRegex
+	GlobalLinkList=""
+	for Results in ${Links}
 	do
 		IndexRegex='^((\ )+|)+([0-9]+)' # Bleugh
 		HttpRegex='(https?.*)' # Barf
@@ -279,25 +235,35 @@ function Prompt() {
 		[[ $Results =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
 		if ! [ -z $IndexID ] # There's always one, grrr. Lynx returns a line "References" before the link list...
 		then
-			#echo "Debug: $IndexID = $HttpURL"
-			Links[$IndexID]=$HttpURL
+			GlobalLinksArray[$IndexID]=$HttpURL
 			# Build the human readable list of links
-			LinkList+="$IndexID = $HttpURL\n"
+			GlobalLinkList+="$IndexID = $HttpURL\n"
 
 		fi
 	done
 	IFS=$OldIFS
-	
-	LinkCount=${#Links[*]}
+
+	# The Globals:
+	# GlobalLinksArray
+	# GlobalLinkList
+	GlobalText="${Text}"
+}
+
+function Prompt() {
+	local URL
+	local RestartURL
+
+	URL=$1
+	RestartURL=$1
 
 	# Prompt
-	local LinkID
-	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link, M = main menu)"
-	read LinkID
+	local MyLinkID
+	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link, M = main menu, R = Redisplay Page)"
+	read MyLinkID
 
 	# Trim Input
 	local LinkIDFix
-	LinkIDFix=${LinkID//[$'\t\r\n']} && LinkID=${LinkID%%*( )}
+	LinkIDFix=${MyLinkID//[$'\t\r\n']} && MyLinkID=${MyLinkID%%*( )}
 
 	# Handle Link Choice
 	local LinkIDRegex
@@ -306,39 +272,51 @@ function Prompt() {
 	if [[ $LinkIDFix =~ $QuitCommandRegex ]] 
 	then
 		Quit
-		exit
 	elif [[ $LinkIDFix =~ $ListCommandRegex ]] 
 	then
+		LinkCount=${#GlobalLinksArray[*]}
 		if [ $LinkCount -gt 30 ]
 		then 
 			echo "The link list is ${LinkCount} lines long, are you sure you want to continue? (Y/n)"
+			local AskThem
 			read AskThem
 			if ! [[ $AskThem =~ ^(Y|y)$ ]]
 			then
 				echo "Okay lets not do that then..."
-				unset Links
-				unset LinkList
-				MainMenu
+				Prompt "${URL}"
 			fi
 		fi
-		echo -e ${LinkList} # Display Links
-		unset Links # Kill the Array to prevent collisions on the next loop.
-		Prompt "${URL}"# Again
+		echo -e ${GlobalLinkList} # Display Links
+		Prompt "${URL}" # Prompt
 	elif [[ $LinkIDFix =~ $NewCommandRegex ]] 
 	then
+		unset GlobalLinkList
+		unset GlobalLinkArray
+		unset GlobalText
 		Begin
+	elif [[ $LinkIDFix =~ $RedisplayCommandRegex ]] 
+	then
+		echo -e "Redisplaying Page..."
+		echo -e "$GlobalText"
+		Prompt "${URL}"
 	elif [[ $LinkIDFix =~ $MenuCommandRegex ]] 
 	then
+		unset GlobalLinkList
+		unset GlobalLinkArray
+		unset GlobalText
 		MainMenu
 	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
 	then
 		if [[ ${BackPage} == "none" ]]
 		then
+			echo "Error: We can't go there!"
 			Prompt "${URL}" # Again
 			exit
 		else
+			unset GlobalLinkList
+			unset GlobalLinkArray
+			unset GlobalText
 			GetPage "${BackPage}" "Prompt" "${URL}"
-			Prompt "${BackPage}"
 		fi
 	elif  [[ $LinkIDFix =~ $LinkIDRegex ]] 
 	then
@@ -346,26 +324,21 @@ function Prompt() {
 		# LinkRegex is Global
 		local LinkURL 
 
-		LinkURL=${Links[${LinkIDFix}]}
+		LinkURL=${GlobalLinksArray[${LinkIDFix}]}
 		if ! [[ $LinkURL =~ $LinkRegex ]]
 		then 
-		    echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
-		    unset Links
-		    Prompt "${RestartURL}" # Again
-		    exit
+			echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
+			Prompt "${URL}" # Again
 		fi
 		
-		unset Links # Just to be sure.
-
 		# Update Back-Page Global
 		BackPage="${LinkURL}"
 
-		GetPage "${LinkURL}" "Prompt" "${URL}"
-
+		unset GlobalLinkList
+		unset GlobalLinkArray
+		unset GlobalText
 		LogUser "${LinkURL}"
-
-		# Loop Back
-		Prompt "${LinkURL}"
+		GetPage "${LinkURL}" "Prompt" "${URL}"
 	else
 		echo "Error: Oops! Invalid Link Number."
 		Prompt "${URL}" # Again
