@@ -1,0 +1,9 @@
+#!/bin/bash
+
+Dir=/home/bpq/nodes/pe1rrr/rrd
+
+$Dir/hf_ports.sh > $Dir/make.sh
+$Dir/inet_ports.sh >> $Dir/make.sh
+$Dir/vhf_ports.sh >> $Dir/make.sh
+chmod 755 $Dir/make.sh
+$Dir/make.sh
