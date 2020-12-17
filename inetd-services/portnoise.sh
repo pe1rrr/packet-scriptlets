@@ -90,21 +90,21 @@ function AsciiPort() {
 	#
 	PortName=${Ports[$Port]}
 	# Export Data
-	rrdtool fetch --end now --start end-1h ${RRDDir}/port${Port}.rrd AVERAGE | tail -n +3 | awk -F ' ' '{print $1,$2}'  | grep -v 'nan' | sed 's/^/"/g;s/:/"/g' > ${TMPDir}/${Tag}_Out.csv 
-	rrdtool fetch --end now --start end-1h ${RRDDir}/port${Port}.rrd AVERAGE | tail -n +3 | awk -F ' ' '{print $1,$3}'  | grep -v 'nan' | sed 's/^/"/g;s/:/"/g' > ${TMPDir}/${Tag}_In.csv 
+	rrdtool fetch --end now --start end-6h ${RRDDir}/port${Port}.rrd AVERAGE | tail -n +3 | awk -F ' ' '{print $1,$2}'  | grep -v 'nan' | sed 's/^/"/g;s/:/"/g' > ${TMPDir}/${Tag}_Out.csv 
+	rrdtool fetch --end now --start end-6h ${RRDDir}/port${Port}.rrd AVERAGE | tail -n +3 | awk -F ' ' '{print $1,$3}'  | grep -v 'nan' | sed 's/^/"/g;s/:/"/g' > ${TMPDir}/${Tag}_In.csv 
 
 	# Smush data
 	paste <(for i in {1..$(wc -l "${TMPDir}/${Tag}_Out.csv" | cut -d' ' -f1)}; do echo $i; done) <(cut -d' ' -f 2 "${TMPDir}/${Tag}_Out.csv") > "${TMPDir}/${Tag}2_Out.csv"
 	paste <(for i in {1..$(wc -l "${TMPDir}/${Tag}_In.csv" | cut -d' ' -f1)}; do echo $i; done) <(cut -d' ' -f 2 "${TMPDir}/${Tag}_In.csv") > "${TMPDir}/${Tag}2_In.csv"
 
 	# Plot Graph
-	gnuplot <<< "set terminal dumb ${Width} ${Height};  plot \"${TMPDir}/${Tag}_Out.csv\" using 2:xticlabels(1) notitle with lines" | head -n ${CutCrap} 
+	gnuplot <<< "set terminal dumb ${Width} ${Height}; plot \"${TMPDir}/${Tag}_Out.csv\" using 2:xticlabels(1) notitle with lines" | head -n ${CutCrap} 
 	echo "    Port ${Port} ${PortName} - Inbound Traffic"
 	gnuplot <<< "set terminal dumb ${Width} ${Height}; plot \"${TMPDir}/${Tag}_In.csv\" using 2:xticlabels(1) notitle with lines" | head -n ${CutCrap} 
 	echo "    Port ${Port} ${PortName} - Outbound Traffic"
 	echo ""
 	echo "Legend has it that the Vertical Axis is adaptive Bytes/s"
-	echo "The Horizontal Axis shows the last 60 mins of activity, each column is 1 minute"        
+	echo "The Horizontal Axis shows the last 6 hours of activity"
 
 	# Clean up temp files
 	rm "${TMPDir}/${Tag}_In.csv" "${TMPDir}/${Tag}2_In.csv" "${TMPDir}/${Tag}2_Out.csv" "${TMPDir}/${Tag}_Out.csv"
