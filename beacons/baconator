@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Create a directory where you will put ASCII files for your beacons
+# specify that directory here:
+ArtDir="/home/bpq/nodes/pe1rrr/beacons/arts"
+
+# Specify the path to the beacon file that the BBS reads every time it sends a beacon:
+BeaconFile="/home/bpq/nodes/pe1rrr/beacons/art.txt"
+
+# You may enter a short signature or omit it entirely, it is appended to the end of the beacon.
+Signature="73 de PE1RRR"
+
+# Put an entry into the crontab (crontab -e) to run every minute, note if you are using an
+# SD Card system you make want to make it write less frequently. 
+# Every 5 minutes is: */5 * * * *
+# * * * * * /home/bpq/nodes/pe1rrr/beacons/baconator > /dev/null 2>&1
+
+OldIFS=$IFS
+
+for i in `ls ${ArtDir}`
+do
+IFS='§'
+	 Beacon+=("`cat ${ArtDir}/$i`")
+done
+
+rand=$[$RANDOM % ${#Beacon[@]}]
+echo ${Beacon[$rand]}  > ${BeaconFile}
+echo "${Signature}" >> ${BeaconFile}
+IFS=$OldIFS
