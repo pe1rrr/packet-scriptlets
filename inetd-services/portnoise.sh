@@ -2,6 +2,12 @@
 # ASCII Graphs! By PE1RRR
 # - sudo apt install gnuplot
 #
+# This works only in conjunction with a properly configured BPQ IPGATEWAY
+# with ENABLESNMP added, and another script that collects the data from BPQ
+# storing it into RRD database files. Those scripts are under construction for
+# general release eventually. Meanwhile, oogle all you want. 
+#
+#
 RRDDir="/home/bpq/nodes/pe1rrr/rrd"
 TMPDir="${RRDDir}/tmp"
 #
