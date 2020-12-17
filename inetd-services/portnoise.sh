@@ -26,6 +26,7 @@ Ports[12]="AX/IP"
 
 # Globals
 QuitRegex='^(Q|q|B|b)$'
+MenuRegex='^(M|m)$'
 Width="60"
 Height="20"
 
@@ -51,7 +52,7 @@ function Prompt() {
 	local Choice
 	local ChoiceTrimmed
 
-	echo "Port? (Q=quit) >"
+	echo "Port? (Q=quit, M=menu) >"
 
 	read ChoiceTrim
 
@@ -60,6 +61,9 @@ function Prompt() {
 	if [[ $Choice =~ $QuitRegex ]];
 	then
 		Quit
+	elif [[ $Choice =~ $MenuRegex ]];
+	then
+		PortMenu
 	fi
 
 
