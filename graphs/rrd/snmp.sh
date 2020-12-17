@@ -1,4 +1,25 @@
 #!/bin/bash
+# Original Script by G7TAJ, Modified by PE1RRR
+# sudo apt install rrdtool
+# Add this script to a crontab to run every minute
+# Example 
+# crontab -e
+# * * * * * /home/bpq/nodes/pe1rrr/scripts/snmp.sh > /dev/null 2>&1
+#
+# BPQ needs to be configured with an IPGATEWAY, check the BPQ documentation for that as well as below.
+#
+# Make sure to add ENABLESNMP to the IPGATEWAY configuration
+#
+# Example bpq32.cfg Configuration: IPADDR must be an IP address from your LAN that is NOT in use.
+# This will launch a numberless LinBPQTAP device. Adapter must be your actual LAN interface.
+#
+# IPGATEWAY
+# Adapter eth0
+# NODEFAULTROUTE
+# IPADDR 192.168.1.9
+# IPNETMASK 255.255.255.0
+# ENABLESNMP
+# ****
 
 IpAddr="192.168.1.9"
 PortList="2,3,4,5,6,7,10,11,12,16"
