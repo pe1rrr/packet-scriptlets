@@ -1,0 +1,199 @@
+#!/bin/bash
+
+# BPQ to FBB Fwd converter 0.0.0A by PE1RRR
+# This will get only so-so conversions done, 
+# anything in the connect script that isnt just a simple
+# connect will have to be manually edited afterwards.
+# Not really happy with this script but it saved me some time
+# converting 56 BBS forward scripts
+
+
+# Path to BPQ's linmail.cfg
+LinMail="/home/bpq/nodes/pe1rrr/linmail.cfg"
+
+# FBB likes to say A but in its port.sys it uses numbers, go figure.
+# Configure here the port configured for BPQ/XR DED interface, where
+# your forwards are going to happen. 
+
+ForwardPort="A"
+
+# Path to FBB configuration dir or just a place where you want the output to go.
+FwdDir="/tmp/fwd"
+
+# After this script is run, it will spit out files into the directory specified
+# above, check each one is sane, add additional C C lines after the SWITCH
+# (some say SWITCH is not necessary but actually, it is if you want to see
+# the progress of the status with the % command in FBB). 
+# HRoutes(H)  are converted as well as flood-bulls (G), (F)or and (B)bs lines are
+# added by default.
+
+
+# Thats all folks
+
+if ! [ -d $FwdDir ] 
+then
+	mkdir -p $FwdDir
+fi
+
+
+OldIFS=$IFS
+IFS=$'\n'
+
+
+CallLineRegex='^[A-Z0-9\ ]*:'
+
+IgnoreRegex='(RMS|FILE|AUTO7P|AMPR|RRRFBB|RRRNOS)'
+for line in  `cat $LinMail`
+do
+	if [[ $line =~ $CallLineRegex ]]
+	then
+		
+		callsign=`printf $line | egrep '^[A-Z0-9\ ]*:' | cut -d ':' -f1`
+		CallArray+=(${callsign})
+	fi
+
+done
+
+TotalCalls="${#CallArray[@]}"
+
+Count=0
+for call in "${CallArray[@]}"
+do
+	IFS=';'
+	call=`printf "%q" "$call"` #| xargs`
+	BlockArray=(`cat $LinMail | awk "/$call/{flag=1;next;next}/\}\;/{flag=0;next} flag " | sed 's/{//' | sed 's/}//' | xargs `)
+	#printf '%s\n' "${BlockArray[@]}"
+	
+	IFS=';'
+	for Parameter in "${BlockArray[@]}"
+	do
+		Parameter=`echo $Parameter|xargs`
+		#Parameter=`printf "%q" "$Parameter"`
+		ParamName=`echo $Parameter | cut -d'=' -f1 | xargs`
+		ParamValue=`echo $Parameter | cut -d'=' -f2 | xargs`
+		#echo "$ParamName is $ParamValue"
+		if [ "$ParamName" = "Enabled" ] && [ "$ParamValue" = "1" ]
+		then
+			# Stuff Callsign into BBS list
+			BBSCalls+=("$callsign")	
+		fi
+		if [ "$ParamName" = "ATCalls" ] 
+		then	
+			IFS='|' read -r -a ATCalls <<< "$ParamValue"
+			fi	
+		# Add full BBS Hroute to list of hroutes
+		if [ "$ParamName" = "BBSHA" ] 
+		then
+			BBSHA="$ParamValue"
+			SYSOP=`echo $ParamValue | xargs | cut -d'.' -f1`
+			fi
+		if [ "$ParamName" = "HRoutesP" ] 
+		then
+			IFS='|' read -r -a HRoutesP <<< "$ParamValue"
+			fi
+		if [ "$ParamName" = "HRoutes" ] 
+		then
+			IFS='|' read -r -a HRoutes <<< "$ParamValue"
+			fi
+		if [ "$ParamName" = "ConnectScript" ] 
+		then
+			IFS='|' read -r -a ConnectScript <<< "$ParamValue"
+			fi
+		if [ $ParamName = TOCalls ] 
+		then
+			IFS='|' read -r -a TOCalls <<< "$ParamValue"
+		fi
+
+		# Make Strings
+		Inc=0
+		unset MyTOCalls
+		TotalToCalls="${#TOCalls[@]}"
+		for i in "${TOCalls[@]}"
+		do
+			MyTOCalls+="F $i"
+        		Inc=$((Inc+1))
+			if [ $Inc -lt $TotalToCalls ]
+			then
+				MyTOCalls+="\n"
+				fi
+      		done
+
+		Inc=0
+		unset MyATCalls
+		TotalATCalls="${#ATCalls[@]}"
+		for i in "${ATCalls[@]}"
+		do
+			MyATCalls+="B $i"
+        		Inc=$((Inc+1))
+			if [ $Inc -lt $TotalATCalls ]
+			then
+				MyATCalls+="\n"
+				fi
+      		done
+
+
+		Inc=0
+		unset MyHRoutesP
+		TotalHRoutesP="${#HRoutesP[@]}"
+		for i in "${HRoutesP[@]}"
+		do
+			MyHRoutesP+="H *.$i"
+        		Inc=$((Inc+1))
+			if [ $Inc -lt $TotalHRoutesP ]
+			then
+				MyHRoutesP+="\n"
+				fi
+      		done
+
+		Inc=0
+		unset MyHRoutes
+		TotalHRoutes="${#HRoutes[@]}"
+		for i in "${HRoutes[@]}"
+		do
+			MyHRoutes+="G $i"
+        		Inc=$((Inc+1))
+			if [ $Inc -lt $TotalHRoutes ]
+			then
+				MyHRoutes+="\n"
+				fi
+      		done
+		
+		MyBBSHA="H $BBSHA"
+		MyCallsign=`printf '%s' "$BBSHA" | cut -d'.' -f1 | xargs`
+		BBSCallsign="A $MyCallsign"
+	done
+        Count=$((Count+1))
+IFS='' read -r -d '' Template <<"EOF"
+A BBSCALL_A
+P FORWARDPORT
+O 1
+N 15   
+C C SWITCH
+SYSOP_F
+TOCALLS_F
+ATCALLS_B
+HROUTESP_H
+HROUTES_G
+R
+--------
+EOF
+
+echo -e "${MyConnectScript}"
+	MySYSOP="F ${MyCallsign}"
+	MyFwdFile=${MyCallsign,,}
+	echo $MyFwdFile
+	FwdFile="${MyFwdFile}.fwd"
+	echo $Template |  sed \
+			-e "s/TOCALLS_F/${MyTOCalls}/g" \
+			-e "s/BBSCALL_A/${BBSCallsign}/g" \
+		       	-e "s/SYSOP_F/${MySYSOP}/g" \
+		       	-e "s/FORWARDPORT/${ForwardPort}/g" \
+			-e "s/ATCALLS_B/${MyATCalls}/g" \
+			-e "s/HROUTESP_H/${MyHRoutesP}/g" \
+			-e "s/HROUTES_G/${MyHRoutes}/g" > ${FwdDir}/${FwdFile}
+
+		MyConnectScript=`printf '# %s\n' "${ConnectScript[@]}"`
+		echo $MyConnectScript >> ${FwdDir}/${FwdFile}
+done
+	echo "Total  ${#BBSCalls[@]} BBSes converted, of ${#CallArray[@]} total users"
+
