@@ -1,0 +1,59 @@
+#!/bin/bash
+
+infiledir="/home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export"
+infile="$1"
+exportdir="/home/bpq/common/fbbdos/pub/archived/bbs_mail/ham"
+
+if [ -z $1 ] 
+then
+	echo "Need to specify which mail export file you want to archive"
+	exit
+else
+	infilepath="${infiledir}/${1}"
+	if ! [ -f ${infilepath} ]
+	then 
+		echo "Looks like there is nothing to archive"
+		echo "${infilepath} doesn't seem to exist"
+		exit
+	fi
+fi
+
+date=`date +w%V_y%G`
+outfile="${exportdir}/${date}_${infile}"
+outzip="${outfile}.zip"
+if ! [ -d ${infiledir} ]
+then
+	echo "Input file directory not found"
+	echo "This needs to be where FBB is storing the exported mail"
+	exit
+	fi
+
+
+if ! [ -d ${exportdir} ]
+then
+	echo "Creating export directory"
+	mkdir -p ${exportdir}
+	fi
+
+if [ -f ${outzip} ]
+then
+	echo "Export archival already run this week... Aborting"
+	exit
+	fi
+
+
+mv ${infilepath} ${outfile}
+if zip ${outzip} ${outfile} 
+then
+	echo "Successfully created ${outzip}"
+	if rm -f ${outfile}
+	then
+		echo "Cleaned up"
+	else
+		echo "There was a problem (permissions?) cleaning up ${outfile}"
+	fi
+
+else
+	echo "Failed to create archive"
+fi
+
