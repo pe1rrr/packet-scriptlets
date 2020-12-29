@@ -1,9 +1,76 @@
 #!/bin/bash
 
+# v0.1
+
+# To get this to work FBB first has to be exporting to a file 
+# For this to happen, add something like the following to
+# forward.sys, or more practically, an include file that can
+# then be "included" in forward.sys by means of a line like:
+#
+# < inc/dumps
+#
+# where 'inc' is a subdirectory within etc/ where forward.sys
+# is located.
+#
+#
+#
+# Below are several dump outputs writing various bulletins to
+# different files.  Each of these dummy-BBS callsigns 'DUMPA'
+# etc need to be added to etc/bbs.sys, preferably at the bottom
+# so that they are out of the way and can be expanded if put in
+# reverse order, be sure not to introduce any new lines to bbs.sys!
+# 
+# inc/dumps:
+#
+#A DUMPA
+#   P @
+#   C /home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export/all_bulls.out
+#   G * 
+#--------
+#A DUMPB
+#   P @
+#   C /home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export/eu_bulls.out
+#   G EU 
+#--------
+#A DUMPC
+#   P @
+#   C /home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export/ww_bulls.out
+#   G WW 
+#--------
+#A DUMPD
+#   P @
+#   C /home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export/usa_bulls.out
+#   G USA
+#--------
+#A DUMPE
+#   P @
+#   C /home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export/nld_bulls.out
+#   G NLD
+#--------
+
+# Directory where FBB forwards into a dump file:
 infiledir="/home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export"
-infile="$1"
+
+# Directory where you want to store the week-based archives:
 exportdir="/home/bpq/common/fbbdos/pub/archived/bbs_mail/ham"
 
+# Usage: <specify export file>
+# e.g ./archive_packet_mail nld_bulls.out
+# Run the script only once per week, preferably at 23:59 on Sunday.
+#
+# Example crontab entry: make sure the user you run is under has
+# write permisson to the $expordir above.
+#
+#
+#55 23 * * SUN /home/bpq/bin/archive_packet_mail all_bulls.out > /dev/null 2>&1
+#55 23 * * SUN /home/bpq/bin/archive_packet_mail usa_bulls.out > /dev/null 2>&1
+#56 23 * * SUN /home/bpq/bin/archive_packet_mail ww_bulls.out > /dev/null 2>&1
+#57 23 * * SUN /home/bpq/bin/archive_packet_mail eu_bulls.out > /dev/null 2>&1
+#58 23 * * SUN /home/bpq/bin/archive_packet_mail nld_bulls.out > /dev/null 2>&1#
+
+
+###############################73 PE1RRR#################################
+infile="$1"
 if [ -z $1 ] 
 then
 	echo "Need to specify which mail export file you want to archive"
