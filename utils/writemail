@@ -1,0 +1,186 @@
+#!/bin/bash
+
+
+# Backups just in case.
+OutDir="/home/bpq/msgs"
+Temp="/tmp"
+
+if [ -z "$1" ]
+then
+	echo "Please specify which BBS you are sending from"
+	read ThisBBS
+else
+	ThisBBS=$1
+fi
+if [ -z "$2" ]
+then
+	echo "Please specify your callsign"
+	read MyCall
+else
+	MyCall=$2
+fi
+
+SignatureFile="/home/bpq/.${MyCall}.sig"
+ImportFileDir="/home/bpq/nodes/$ThisBBS/fbb/var/ax25/fbb/mail"
+ImportFileName="mail.in"
+
+# FBB / BPQ deletes mail.in after processing so we can only check the validity of
+# the path to the directory it goes into.
+if ! [ -d $ImportFilePath ]
+then
+	echo "Error: Invalid BBS path"
+	exit
+fi
+
+
+if ! [ -d $OutDir ]
+then
+	mkdir -p ${OutDir}
+fi
+
+function PromptType() {
+	echo "Enter Type P or B:"
+	read Type
+	if ! [[ ${Type} =~ ^(P|p|B|b)$ ]]
+	then
+		PromptType
+		fi
+
+}
+
+function PromptTo() {
+	echo "Enter 'TO:' field:"
+	read MyDest
+	chrlen=${#MyDest}
+	if [ $chrlen -gt 6 ]
+	then
+		echo "Thats too long. Max 6."
+		PromptTo
+	fi
+}
+
+function PromptAt() {
+	echo "Enter '@' field:"
+	read At
+	chrlen=${#At}
+	if [ $chrlen -gt 6 ]
+	then
+		echo "Thats too long. Max 6."
+		PromptAt
+	elif [ $chrlen -lt 1 ]
+	then
+		echo "Must specify an @ address, even if local"
+		PromptAt
+	fi
+}
+
+function PromptSubject() {
+	echo "Enter subject"
+	read Subject
+	chrlen=${#Subject}
+	if [ $chrlen -gt 30 ]
+	then
+		echo "Thats too long. Max 30."
+		PromptSubject
+	elif [ $chrlen -lt 1 ]
+	then
+		echo "Not allowed to send a empty subject."
+		PromptSubject
+	fi
+}
+
+function Prompt() {
+	PromptType
+	PromptTo
+	PromptAt
+	PromptSubject
+	WriteMail
+}
+
+function MakeMail() {
+
+OldIFS=$IFS
+IFS='' read -r -d '' Template <<"EOF"
+SB TMPTO @ TMPAT  < TMPMYCALL
+TMPSUBJECT
+TMPMAIL
+TMPSIGNATURE
+/EX
+EOF
+IFS=$OldIFS
+
+	MailText=`cat ${Filename}`
+
+	# Doing internal string replacement for the mailtext here because any weird characters
+	# will break sed.
+	Template="${Template//"TMPMAIL"/"$MailText"}"
+
+	if [ -f $SignatureFile ]
+	then
+		Signature=`cat ${SignatureFile}`
+	else
+		Signature=""
+	fi	
+	Template="${Template//"TMPSIGNATURE"/"$Signature"}"
+
+	MsgPath="${OutDir}/msg_${Tag}"
+	IFS=$'\n'
+	printf "%s\n"  $Template |  sed \
+			-e "s/TMPTO/${MyDest}/g" \
+			-e "s/TMPAT/${At}/g" \
+		       	-e "s/TMPMYCALL/${MyCall}/g" \
+		       	-e "s/TMPSUBJECT/${Subject}/g" > $MsgPath
+
+
+	Finish
+}
+
+function Finish() {
+
+	echo "Do you want to review the mail before sending it? (y/n)"
+	read Ask
+	if [[ $Ask =~ ^(Y|y)$ ]]
+	then
+		less $MsgPath
+	fi
+	echo "Ready to send? (y/n)"
+	read Ask2
+	if [[ $Ask2 =~ ^(Y|y)$ ]]
+	then
+		SendMail
+		exit
+	else
+		Finish
+	fi
+
+}
+
+function SendMail() {
+	ImportFilePath="${ImportFileDir}/${ImportFileName}"
+	cat $MsgPath >> $ImportFilePath
+	echo "Mail added to $ImportFilePath for automatic import"
+	rm $Filename
+}
+
+function WriteMail() {
+	if vi $Filename
+	then
+		if ! [ -f $Filename ]
+		then
+			echo "Didn't find a file to include"
+			Prompt
+			exit
+		else
+			MakeMail
+		fi
+	else
+		Prompt
+	fi
+}
+
+
+Tag=`echo $(openssl rand -hex 9)`
+Filename="${Temp}/msg_${Tag}"
+
+Prompt
+
