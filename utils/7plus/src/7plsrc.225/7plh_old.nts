@@ -1,0 +1,303 @@
+
+v1.4:
+-----
+      Finally 7PLUS runs on AMIGA as well (correcting wouldn't work).
+      Compatibility to systems with filename structures different to
+      MS_DOS/ATARI added.
+      -J, -P and -T option added.
+
+      Several minor bug-fixes.
+
+v1.41/1.43:
+-----------
+      Bug in -J option fixed.
+      When prompted for new filename, ENTER would not break. Fixed.
+
+v1.5:
+-----
+      Compatibility to UNIX-based systems.
+      When decoding and a COR-file is already present, 7PLUS will do
+      the correction first.
+      -J option can now do multiple joining.
+      -X can now extract selected files.
+      -N option added (Atari_St only).
+      -Y option added for automated surroundings.
+      -# option for use of 7PLUS in BBS file servers.
+      Minichecksum added to headers.
+      Checksum added to ERR- and COR-files.
+      Length of original file added to ERR- and COR-files to insure, only
+      the correct original file is used for compiling COR-Files.
+      Manuals given a good workover. Detailed chapters about up- and down-
+      loading added to help newcomers.
+
+      Changes in headers a/s/o are still compatible with older versions
+      and vice versa.
+
+      Bugs fixed, that were present since v1.0, but never detected:
+      -------------------------------------------------------------
+
+      1st bug:
+      --------
+      When encoding a file using the -S option, 7PLUS would fail when
+      the encoded file was shorter then the number of lines specified.
+
+      Example:
+               TEST.TXT is 1024 bytes long which will result in 17 code
+               lines. If encoded with '-S 40', 7PLUS wouldn't decode it,
+               because it found lines 18 through 40 missing...
+
+      2nd bug:
+      --------
+      When splitting a file whose length can be devided through 62 without
+      a rest, 7PLUS would leave the last part empty, when the number of re-
+      sulting lines could be devided evenly through the number of parts.
+
+      Example:
+               TEST.TXT is 3100 bytes long. If encoded into 2 equal parts
+               using '-SP 2', 7plus would leave the second part empty,
+               containing only the header and the foot line.
+
+
+      These bugs manifested themselves only in rare cases, but versions
+      prior to v1.5 should be replaced by the v1.5 anyway.
+
+v1.6:
+-----
+      Added rebuild.c. Now one-byte errors are automatically corrected. For
+      this, an additional 15bit-checksum was added to the header and each
+      code line.
+      Due to the additional checksum, v1.6 files can only be decoded with
+      version 1.4 and higher. V1.3 and lower will report all lines damaged!
+
+      Found minor bugs in stripping normal CRC to 14 Bit '&0x1fff' instead of
+      '&0x3fff' .... embarassing...
+
+      Also, minichecksum took wrong offset to header, so CRC was not calcula-
+      ted.
+
+v1.61:
+------
+      Optimized rebuild.c for speed. Now runs 40% faster. Also, a message is
+      output, telling which line has been rebuilt.
+
+v1.62:
+------
+      Had to make some changes in the handling of extended filenames on
+      AMIGA and UNIX. The changes are unfortunately not compatible to
+      previous versions, sorry...
+      A bit of cosmetics done on 'rebuild'-outputs.
+
+v1.63:
+------
+      Due to a bug inserted by DL4ZBH, where there was none, v1.63 was neces-
+      sary to be able to redistribute the AMIGA-version.
+      However it's identical with the v1.62...
+
+v1.70:
+------
+      test_file() now asks for 'yes', 'no' and 'always'. This is practical,
+      when reencoding a file without manually erasing the encoded files
+      created earlier.
+
+      Rebuilding of header did not work when a space character was missing.
+      The space character is not part of the 7PLUS-code, so rebuild() never
+      tried to put it in the header... fixed.
+
+      When decoding, the output-file is not closed after each decoded part
+      and re-opened before the next part. This save quite some time, because
+      the write buffer does not need to be flushed as often as before.
+
+v2.00:
+------
+      7PLUS now works with metafiles. This increases the speed of executing
+      COR-files extremely.
+
+      Splitting of CORs.
+
+      Multiple COR-handling.
+
+      extract() now also extracts info files that accompany 7PLUS-files.
+      In the UK, there is a strange BBS that keeps stripping the first
+      space of the 7PLUS file headers. extract will now automatically
+      add the missing space character.
+
+      7PLUS-files can now also be used as COR-files (-C).
+
+      Recreating ERRs from metas.
+
+      7PLUS can clean up behind itself now (-K).
+
+      Adding of head- and foot-text to 7PLUS-files (-TP).
+
+      Timestamp of original file is kept.
+
+      Pepped up some of the screen-outputs.
+
+      When joining error reports, 7PLUS will not stop if one ERR-file is
+      missing in line. Same goes for CORs.
+
+      And lot's of minor stuff...
+
+v2.01:
+------
+     Found a slight bug in join(). It kept on looking for the next ERR in
+     line, even if there were no more. This meant, that after execution
+     of join, there was a delay of abt 10 seconds.
+
+     DL1XAO @DB0AGM.DEU.EU (920622)
+     {
+       Due to some differences in the behaviour of scanf() on the Atari,
+       the statements '%X' had to be changed to '%lX'.
+
+       Quick-extract: Files that have the extension '.x' will automatically
+       be run through the 7PLUS extractor when doubleclicked on.
+       /* This will also work when compiled on other systems! (Axel) */
+
+       Modifying filelengths is not supported by TOS, therefore, an index file
+       (*.7ix) will be created along with every meta file.
+
+       When prompted for new filename, ENTER wouldn't break. We had that one
+       before, didn't we??  :-)
+     }
+
+     Because of the handling of the metafiles, 7PLUS requires abt 24K of
+     room on the stack to run properly!  Forgot to mention this with the
+     v2.00... sri
+
+v2.02:
+------
+     Please! Don't hit me!
+     I hope, this would not happen, but it did...
+
+
+     Thanks to Uli DF7SC, two bugs have been found in the V2.00 and v2.01:
+
+     Bug 1: decode()
+
+     If the line before the last line in the last file was corrupted, the
+     last line was always written with a length of 62 bytes. Fixed.
+
+     Bug 2: correct() (only occures on systems that do not use chsize())
+
+     If the last line of the last file was missing, sometimes chsize()
+     didn't work. chsize() would act as if it DID change the filessize,
+     and did not report an error, even if it failed. This bug may only be
+     true with Borland's compilers.. Fixed.
+
+v2.03:
+------
+     Another bug related to the last line of a file (reported by DF7SC,
+     unfortunately he forgot to report it the first time :-<)
+
+     This bug is present since version 1.60.
+
+     decode()
+
+     If the last line of a file is corrupted in a way that it still has
+     the right length and more than one character is incorrect, the line
+     would not be reported as corrupt.
+     If it was the last line of the last file, the metafile had an incorrect
+     length and 7PLUS reported 'Decoded file has wrong length..'.
+     Fixed.
+
+     Requirements on stack space are back to normal. The struct m_index is
+     now allocated space on the heap, rather than on the stack.
+
+     921015: Official release of 7PLUS v2.03
+
+v2.04:
+------
+     Oh, I hate getch() and getc()!
+     If prompted for overwrite twice, answering 'n' the second time, the
+     extraction is terminated.. Added a fflush() to make sure, the keyboard
+     buffer is empty.
+     On the AMIGA, the input routine has been completely changed.
+
+     Hans, DD3IF, managed to add set_filetime() for the AMIGA. Now, 7PLUS
+     will also read and set timestamps correctly on an AMIGA system.
+
+     921215: Official release of 7PLUS v2.04
+
+v2.05:
+------
+     With the help of Martin DG1ECN @DB0IZ.DEU.EU, 7PLUS now also runs under
+     OS9/68K.
+
+     When screen output is redirected to a file, output is now less verbose
+     and does not print over the same line repeatedly.
+
+     '-J':
+     When encoding, 7PLUS will write all parts into a single file.
+     The filename of the combined file is assigned '.upl' (upload) for an
+     extension. When using this option in conjunction with the '-TB' option,
+     make sure the BBS is able to process such a combined upload.
+
+     '-SYSOP' option added. Forces 7PLUS to decode, even if parts are missing!
+     Use only when UNAVOIDABLE!!!! Bear in mind that you may produce HUGE ERR
+     files!
+
+v2.06:
+------
+     Finally have EMX/GCC for OS/2 running. Made adjustments. GCC/EMX has
+     chsize() but I doesn't work. EMX/GCC has utime(), but I doesn't work
+     either. Compiled with EMX/GCC, 7PLUS is really FAST, much faster than
+     with MSC.
+
+     7PLUS will also compile with the IBM C Set/2 & Developper's Toolkit/2 and
+     Borland C++ for OS/2.
+
+v2.10:
+------
+     Only MSDOS & OS/2:
+     When displaying the help info, 7PLUS will only output as many lines as
+     fit onto the screen and then ask for a keystroke.
+
+     Timestamping with utime() should work on all systems (that have it)
+     correctly. Different timezones should not cause problems any more.
+
+     When correcting a metafile using regular 7PLUS files (*.p??), 7PLUS
+     will look for the appropriate parts by itself if invoked this way:
+
+      7PLUS FILE.7MF -C
+
+     If part 5, 10 and 32 are required to do the correction, 7PLUS will
+     look for and use FILE.P05, FILE.P0A and FILE.P20 automatically.
+     This is much less fuss than doing:
+
+      7PLUS FILE.P05 -C
+      7PLUS FILE.P0A -C
+      7PLUS FILE.P20 -C
+
+     If a metafile is already present, 7PLUS will now automatically check for
+     the presence of COR-files AND regular 7PLUS parts that could be used for
+     the correction!
+
+     Thus, calling 7PLUS this way:
+
+      7PLUS FILE
+
+     will do practically everything automagically.
+
+     7PLUS will now accept hex values with options that expect numerical
+     values.
+
+      7PLUS FILE.EXE -S 0x44
+
+     does the same as
+
+      7PLUS FILE.EXE -S 68
+
+     Hex values must be preceded by '0x' to identify them as hex.
+     Octals will work as well, but must only be preceded by '0'.
+
+     Doing
+
+      7PLUS FILE.TXT -S -R 5
+     
+     caused 7PLUS to ignore '-R'. Fixed.
+
+     '-TB':
+     If no format file is specified along with '-TB', 7PLUS will look for
+     'format.def' by default.
+
+

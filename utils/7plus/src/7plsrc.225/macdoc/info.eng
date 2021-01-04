@@ -1,0 +1,88 @@
+Description of the 7PLUS Macintosh Version 
+------------------------------------------
+
+Version 1.0 by January, 18th 1997
+
+A new 7Plus program for Mac OS based on the well known 7PLUS version 2.17 for
+MS-DOS/ATARI/AMIGA/UNIX has been developed. The Mac OS version has been
+integrated into the 7PLUS MS-DOS code, so maximum compability has been
+achieved. This ensures quick availability of future enhancements of 7PLUS
+on the Macintosh platform. The functionality of 7Plus Macintosh is nearly
+identical to the MS-DOS version. The operating of the program is shell-based
+and you have to enter the file names and options instead of using pop-up
+menus and the mouse. Hopefully this will be chanced in future versions.
+
+
+Requirements:
+
+The program code is fat-binary. It works on any 68K Mac with at least a
+68020 processor or on a Power Mac.
+
+
+Operation:
+
+After starting the program a dialog appears for entering the argument list
+of 7Plus. This argument list is identical to the 7PLUS MS-DOS version. The
+valid parameters are described in the original 7PLUS documentation by Axel
+(DG1BBQ). PLease refer to this documentation. Of course, the program name
+has to be excluded from entering in the dialog window. The bottons below the
+argument list input are used for redirecting the standard input and standard
+output of 7Plus. This functionality is useful for porting unix programs to the
+Mac. In our case however, this redirecting is of not much use.
+After clicking on the OK botton the program works as the MS-DOS version does.
+When the encoding or decoding is done you have the choice to restart the
+program by simply entering a "c" or to stop the program by typing any other
+key. This procedure simplifies operation if you want to extract 7Plus code
+from a log file and to decode it afterwards.
+The program looks for files only in the directory where the program resides.
+Exception: you enter the file names including path information.
+
+
+Differences to the MS-DOS version:
+
+filenames/icons:
+The Macintosh-type filenames are supported. The directory separation character
+is the colon (:). You can enter path names as "Disk:programs:converters:" or
+":test_folder:". If spaces are included in the file name you have to enclose
+the name with quotation marks ("). The 7Plus coded files names correspond to
+the MS-DOS convention. A special icon will be assigned to these files by
+setting the file type/creator. The decoded files get a file type/creator
+corresponding to their suffix. This is done by an internal suffix table. At
+the moment the following suffixes are supported:
+
+   suffix      corresponding programm / coding
+   -------------------------------------------
+   .sit        StuffIt
+   .Z          Unix compress
+   .lzh        LHA
+   .zip        ZIP
+   .gz         Gzip
+   .arj        DeArj
+   .cpt        Compact Pro
+   .tar        Unix tar Archive
+   .hqx        BinHex
+   .txt        BBEdit
+   .gif        Giff
+   .tif        TIF
+   .eps        Encapsulated Postscript
+   .epsf       Encapsulated Postscript
+   .jpg        JPEG
+
+Additional suffixes may be implemented upon request. I plan to install a
+dialog window for setting these suffixes by the user.
+
+Options:
+All options listed in the documentation by Axel are supported. Exceptions:
+
+-N  deactivating the keyboard request <not available>
+-P  use CR as line separator <default>
+
+
+The current version has been tested thoroughly by a small group of people
+and was decided to by bug-free. However there might by something which does
+not work or should be improved. So please send me bug-reports and suggestions.
+
+The 7Plus for Macintosh can be distributed freely, but please include this
+documentation.
+
+Vy 73 de Detlev, DK2HD @DB0RBS.#BW.DEU.EU

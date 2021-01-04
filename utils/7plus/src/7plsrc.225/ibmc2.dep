@@ -1,0 +1,252 @@
+# IBM Developer's Workframe/2 Make File Creation run at 20:36:13 on 03/02/93
+
+# Make File Creation run in directory:
+#   E:\TC\7PLUS;
+
+# Assumed INCLUDE environment variable path:
+#   D:\IBMCPP\INCLUDE;
+#   D:\IBMCPP\IBMCLASS;
+#   D:\TOOLKT20\C\OS2H;
+#   D:\TOOLKT20\ASM\OS2INC;
+
+
+7PLUS.OBJ:  7PLUS.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   IBMC2.MAK
+
+CORRECT.OBJ:  CORRECT.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+DECODE.OBJ:  DECODE.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+ENCODE.OBJ:  ENCODE.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+EXTRACT.OBJ:  EXTRACT.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+JOIN.OBJ:  JOIN.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+REBUILD.OBJ:  REBUILD.C  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK
+
+UTILS.OBJ:  UTILS.C  \
+#  {$(INCLUDE);}sys/utime.h  \
+#  {$(INCLUDE);}utime.h  \
+   {.;$(INCLUDE);}7plus.h  \
+#    {$(INCLUDE);}stdio.h  \
+#    {$(INCLUDE);}string.h  \
+#    {$(INCLUDE);}time.h  \
+#    {$(INCLUDE);}ctype.h  \
+#    {$(INCLUDE);}errno.h  \
+#    {$(INCLUDE);}limits.h  \
+#    {$(INCLUDE);}sys/types.h  \
+#    {$(INCLUDE);}io.h  \
+#    {$(INCLUDE);}types.h  \
+#    {$(INCLUDE);}stat.h  \
+#    {$(INCLUDE);}sys/stat.h  \
+#    {$(INCLUDE);}stddef.h  \
+#    {$(INCLUDE);}proto/dos.h  \
+#    {$(INCLUDE);}libraries/dos.h  \
+#    {$(INCLUDE);}libraries/dosextens.h  \
+#    {$(INCLUDE);}exec/memory.h  \
+#    {$(INCLUDE);}malloc.h  \
+#    {$(INCLUDE);}stdlib.h  \
+#    {$(INCLUDE);}unistd.h  \
+#    {$(INCLUDE);}dir.h  \
+#    {$(INCLUDE);}conio.h  \
+#    {$(INCLUDE);}termio.h  \
+#    {$(INCLUDE);}ext.h  \
+#    {$(INCLUDE);}sgtty.h  \
+#    {$(INCLUDE);}termcap.h  \
+   {.;$(INCLUDE);}globals.h  \
+   IBMC2.MAK

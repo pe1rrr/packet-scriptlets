@@ -1,0 +1,9 @@
+config.sh is meant to be a shared file for more scripts that may join
+this collection for 7plus handling. the only shipped working script
+so far is the encoder, located in the encode sub directory.
+
+Edit config.sh to your desired path
+
+
+pi7plus is a binary built from the 7plus source code also included
+with this repo.

@@ -1,0 +1,90 @@
+Anleitung zur Macintosh Version von 7PLUS
+-----------------------------------------
+
+Version 1.0 vom 18.1.1997
+
+Auf vielfachen Wunsch ist ein neues 7Plus für Mac OS entstanden, das in der
+Funktionsweise und der Bedienung weitgehend dem bekannten 7PLUS fuer MS-DOS/
+ATARI/AMIGA/UNIX entspricht. Es basiert auf der aktuellen Version 2.17 (Danke
+Axel!) und wurde in diese integriert. Hierdurch ist maximale Kompabilität
+gewährleistet, so daß zukünftige 7Plus Erweiterungen sofort auch für Mac OS
+zur Verfügung stehen werden. Den Nachteil einer nicht Mac-typischen
+Implementierung kann man wohl verschmerzen. Ich denke aber, dass man dies-
+bezüglich in einer späteren Version noch einiges optimieren kann.
+
+
+Voraussetzung:
+
+Das Programm liegt in einer fat-binary Version vor. Es wird ein 68K Mac mit
+mindestes 68020 Prozessor oder ein PPC erwartet.
+
+
+Zur Bedienung:
+
+Nach Start des Programms erscheint ein Dialogfenster zur Eingabe der Argu-
+mentenliste von 7Plus. Die Argumentenliste entspricht dem MS-DOS 7PLUS. Die
+zulässigen Parameter sind der Originalbeschreibung von Axel (DG1BBQ) zu
+entnehmen. Der Programmname von 7Plus ist in dem Fenster natürlich nicht
+anzugeben. Die unterhalb der Argumentenzeile befindlichen Knöpfe dienen zur
+Auswahl eines Eingabe- oder Ausgabefiles für 7Plus. Hiermit werden die Stan-
+dardeingabe und die Standardausgabe umgelenkt. Da bei 7Plus aber außer bei
+Fehlerbedingungen nichts einzugeben ist und die Ausgabe nicht dokumentations-
+würdig ist, schlage ich vor, diese Knöpfe nicht weiter zu beachten.
+Nach Bestätigung der Argumentenliste startet 7Plus wie von der MS-DOS Version
+gewohnt. Nach Ablauf der Kodierung / Dekodierung kann 7Plus ohne Beendigung
+des Programms erneut gestartet werden, in dem man bei der Abfrage ein "c"
+eintippt. Andere Zeicheneingaben beenden das Programm.
+Das Programm sucht nach den Files in dem Verzeichnis, in dem das Programm
+liegt; es sei denn, die Files werden mit Pfadnamen angegeben.
+
+
+Abweichungen gegenüber der MS-DOS Version:
+
+Filenamen/Icons:
+Es werden die Macintosh üblichen Filenamen unterstützt. Das Verzeichnis-
+trennzeichen ist bei Mac OS der Doppelpunkt (:). Es lassen sich auch Pfade
+wie "Festplatte:Programme:Konverter:" oder ":Test_ordner:" angeben. Enthält
+der Filename Leerzeichen, so ist der gesamte Name in Hochkomma (") zu setzen.
+Die 7Plus codierten Files entsprechen den DOS Konventionen. Diese 7Plus-Files
+bekommen einen speziellen Filetype/creator und somit ein eigenes Icon. Die
+dekodierten Files bekommen ueber eine interne Tabelle gemäß ihres Suffixes
+den passenden Filetype/creator zugewiesen. Zur Zeit werden folgende Suffixe
+erkannt:
+
+   Suffix      zugehöriges Programm / Kodierung
+   --------------------------------------------
+   .sit        StuffIt
+   .Z          Unix compress
+   .lzh        LHA
+   .zip        ZIP
+   .gz         Gzip
+   .arj        DeArj
+   .cpt        Compact Pro
+   .tar        Unix tar Archive
+   .hqx        BinHex
+   .txt        BBEdit
+   .gif        Giff
+   .tif        TIF
+   .eps        Encapsulated Postscript
+   .epsf       Encapsulated Postscript
+   .jpg        JPEG
+
+Weitere Suffixe können auf Nachfrage hin implementiert werden. Ein Dialog-
+fenster wird für die Zukunft angestrebt, so daß der Benutzer selbst aktiv
+werden kann.
+
+Optionen:
+Es werden alle Optionen nach Axels Handbuch untersützt. Ausnahmen gelten für:
+
+-N  Deaktivierung Tastendruckabfrage <nicht möglich>
+-P  CR als Zeilentrenner <Default>
+
+
+Obwohl diese Version im kleinen Kreise getestet und für gut befunden wurde,
+lassen sich Fehler nicht ausschliessen. Daher bin ich für Fehlerberichte
+und Verbesserungsvorschläge dankbar.
+
+Das 7Plus für Macintosh kann an jeden Interessenten weitergegeben werden.
+Ich bitte aber bei Weitergabe, dieses File nicht zu vergessen.
+
+Vy 73 de Detlev, DK2HD @DB0RBS.#BW.DEU.EU

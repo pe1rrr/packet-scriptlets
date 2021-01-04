@@ -1,0 +1,435 @@
+/*
+7PLUS History:
+==============
+
+:
+:
+:
+
+930427: Official release of 7PLUS v2.10
+
+v2.11
+-----
+930504:
+
+     utils.c, strip()
+
+     Added {}|^ to list of illegal charaters.
+
+     extract.c
+
+     Filenames are now checked more thoroughly for illegal characters.
+
+930506:
+
+     encode.c
+
+     Minor changes due to incompatibilities with compiler on ATARI_ST.
+
+     Input of hex values on the command line won't work on the Atari due to a
+     bug in the compiler.
+
+     Suggested by DL1XAO (Atari only)
+     {
+       When the '-TB'-Option has been issued without specifying the format
+       file's name, 7PLUS first tries to find a format file called 'name.def',
+       where 'name' is the unencoded file's name without extension, e.g.:
+
+	 If encoding 'test.dat', 7PLUS will search for 'test.def'
+	 (note: 'test.def' MUST reside in the same directory as 'test.dat').
+
+       If 'name.def' is found, '-J' is automatically activated.
+
+       In case it is not found, 7PLUS will use the default format file
+       'format.def'.
+     }
+
+v2.12
+-----
+940103:
+
+     encode.c
+
+     When the last part was re-encoded using the '-R' option, the result
+     was garbage, because the blocksize for the last part was calculated
+     first and then used to fseek to the beginning of the last part.
+
+940104:
+
+     New option added: '-Q'
+
+     ALL screen output is redirected to 7PLUS.OUT. '-Y' is automatically
+     enabled as well.
+
+     New option added: '-G'
+
+     Create all files in same dir as input files.
+
+     Example:
+
+     7PLUS E:\TEMP\FFR -G
+
+       7PLUS will put FFR.EXE in E:\TEMP\. In case an error occured, the ERR
+       file will be put there.
+
+     The '-G' option can be used with any action (decode, extract, correct,
+     etc.) with the exception of encoding, because the destination dir has
+     to be specified (it does not hurt to use '-G' when encoding, though,
+     because it is simply ignored then):
+
+     7PLUS E:\UTIL\FFR.EXE E:\TMP\
+
+       7PLUS will encode FFR.EXE and put the resulting files in E:\TEMP\.
+
+     Never forget to conclude the destination dir with a '\'!!!
+
+     Reason for '-G' option:
+
+     Sysops, who use 7PLUS to decode 7PLUS files on their BBS by remote
+     operation and can't change the current dir to the one containing
+     the 7PLUS files need this option.
+     Without the '-G' option it meant a lot of copying around on the BBS
+     to get work done.
+
+v2.13
+-----
+940105:
+
+     When extracting files from a savefile, the extracted filenames were
+     not displayed (it worked when '-G' was issued).   Fixed.
+
+v2.14
+-----
+940109
+
+     '-R' option:
+
+     A range of parts to be encoded can now be specified with the
+     '-R' option.
+
+     Examples:
+
+     7PLUS E:\UTIL\FFR.EXE -R 2-3 <--- re-encode part 2 through 3.
+     7PLUS E:\UTIL\FFR.EXE -R 2-  <--- re-encode beginning with part 2.
+     7PLUS E:\UTIL\FFR.EXE -R -3  <--- re-encode up part 3 including.
+
+     This was necessary to allow better use of 7PLUS together with TheBox's
+     file server EL.
+
+
+v2.15
+-----
+940308
+
+     encode.c:
+
+     Had to change this:
+
+      after[0]   = ((long)(curline & 0x1ff) << 14) | (csequence & 0x3fff);
+
+     to this:
+
+      after[0]   = (long)(curline & 0x1ff) << 14;
+      after[0]  |= (csequence & 0x3fff);
+
+     because some compilers seem to handle the hirarchy of unary operators
+     differently (Turbo C++ v3).
+
+
+v2.16
+-----
+951212
+
+     '-#'-option did not put the correct filename into 7PLUS.FLS. Fixed.
+
+v2.17
+-----
+960212
+
+     When decoding, the checksum of the header was not finally checked.
+     I did not notice this, because the single byte correction functioned
+     correctly. This bug allowed manipulation of the sort that when decoding
+     on drive C:, COMMAND.COM or any not write protected file in the root
+     dir could be overwritten!
+
+   > That bug is fixed. Make sure, this version is run on ALL automatic <
+   > servers!!!!!!!! Get rid of older versions. Quick!                  <
+
+     Since older 7PLUS versions without checksums are also open to that
+     special case of manipulation, 7PLUS will no longer decode these files.
+
+970216
+
+     Minor adaptations made by DK2HD for MAC-compatability.
+     No changes in regards to other systems.
+
+v2.18
+-----
+970403
+
+     Found a severe bug that causes infinite writing to metafile and
+     inconsistancies in error list in ERR files:
+
+     In DECODE.C:  j = (int) i>>5;   <--- Wrong!
+                   j = (int) (i>>5); <--- That's better!
+
+970407
+
+     Added -KA option. For reasons of speed in crowded dirs -K will stop
+     erasing when 10 files in consecution are missing (only with ERR & COR).
+     Erasing can be forced to continue with the -KA option.
+
+970414
+
+     When trying to encode a file that has a filelength of 0 (what for?),
+     7PLUS generated a division by zero error. 7PLUS will now output an
+     error msg and quit correctly with return code 20.
+
+     When the LAST line of the LAST part was corrupted AND the length of
+     the unencoded file was greater than 2^15-1 AND the number of valid
+     bytes in that line was different than 62, correction would sporadically
+     produce an incorrect result. Fixed.
+
+970418
+
+     This was more an inconvenience than a bug:
+
+      When specifying a searchpath/destination dir, a path separator will
+      automatically be added, if necessary.
+
+      7plus test.zip \temp
+      7plus test.zip \temp\
+
+      have the same effect: encode test.zip and place the resulting files in
+      \temp.
+
+970422
+
+      Final adaptations for Linux compatability.
+
+970507
+
+      Found another bug related to the 970403 bug.
+
+970514
+
+      Added return code 21...  'Not enough mem'
+
+970515
+
+      With VERY large files (more than 3MB), 7PLUS sometimes put the wrong
+      part number into the ERR files in case of an error. Fixed.
+
+970519
+
+      7PLUS would not allow ':' in Linux filenames. Fixed.
+
+
+970722
+
+      '-SYSOP': When the last part had the same number of lines than the
+      other parts, 7PLUS would sometimes ignore it and produce a corrupted
+      decoded file.
+
+
+v2.19
+-----
+980122
+
+     '-U': For server use only. Define name of files created during encoding
+     and COR compilation.
+
+     Example:
+
+     7plus test.zip -u c:\box\import\dg1bbq
+
+     will create c:\box\import\dg1bbq.7pl or c:\box\import\dg1bbq.p01-pxx
+
+     When used with -J, the upload file's name will be
+
+     c:\box\import\dg1bbq.upl.
+
+     Also, when used with -#, 7plus.fls will be named c:\box\import\dg1bbq.fls
+     in accordance with above example. Its content will be the same as if -u
+     where not issued, though.
+
+     Note: -J will not work when creating CORs!
+
+980319
+
+     -r changed.
+     Will now accept multiple ranges.
+     Example: -r 1-3,4,10,33-
+
+     -x changed.
+     Extractor will not prompt for overwrite anymore, but will try
+     to produce an alternate name by itself. If e.g. TEST.P01 is to be
+     extracted and if the same file already exists, the extractor will save it
+     as TEST1.P01 and the next time around as TEST2.P01 etc.
+
+     Fixed a very old, but minor bug:
+     When TEST.7PL as well as TEST.P01 etc. were present, the call
+     "7plus test.7pl" would decode TEST.P01 etc instead.
+
+     -tb fixed.
+     7PLUS would not look for test.def with the following call:
+
+     7plus test.zip -tb
+
+     It should've looked for test.def first and if not found for format.def
+
+v2.20
+-----
+990210
+
+    -sysop fixed.
+    If part 1 was missing, the fist line of the next existing part was marked
+    as missing, even though it was OK. This only happened on systems that
+    allow long filenames. Since the long filename is only contained in part
+    1, 7PLUS would try to get it from the next available part, wich caused
+    the error.
+
+990212
+
+    Extracted the bug I previously inserted :-) Instead of line 0 of the next
+    existing part, it was now line 0 of part 1 that was always reported
+    missing. Fixed.
+
+990214
+
+    -r in conjunction with -j would cause a write error (or an expection error
+    on 32bit systems), because the name for the upload file was never genera-
+    ted. Fixed.
+
+    Minor bug in multiple ranges routine. -r -3 would only re-encode part 1.
+    Only -r 1-3 would work correctly. Fixed.
+
+990217
+
+    -# modified.
+    Formally only for encoding. Now, it also produces a file named 7plus.fls
+    when decoding is succesfull.
+
+    File content:  <8.3-filename><space char><full original filename><newline>
+
+    Reason: When 7PLUS is used for automatic decoding in a fileserver, it
+    may happen that the server can't find the decoded file, because 7PLUS
+    replaced the 8.3-filename with the full original filename.
+
+
+v2.21
+-----
+990411
+
+   When using -TB together with -R, 7PLUS would produce empty files for the
+   unselected parts.
+
+v2.22
+-----
+991114
+
+   When creating a correction file, 7PLUS would misinterpret a given name for the
+   original file for a searchpath.
+
+   E.g.:  7plus file.err /dir1/dir2/file.original.zip
+
+   7PLUS would try to read original data from /dir1/dir2/file.original.zip/file.zip
+
+   Fixed.
+
+991120
+
+   Fixed the 991114 fix <grin>.
+
+v2.23
+-----
+991206
+
+   Lines containing single byte corruptions were not always rebuilt
+   when using -SYSOP option. Fixed.
+
+991207
+
+   Added -SEND and -SEND2 options.
+
+   When encoding a file named file.ext, the option
+
+     -send "s dg1bbq @db0ver"
+
+   will add the send command to the top of an encoded file like this:
+
+     s dg1bbq @db0ver file.exe 01/02
+
+     -send2 "s dg1bbq @db0ver"
+
+   does the same, except it adds a linebreak:
+
+     s dg1bbq @db0ver
+     file.exe 01/02
+
+   -send/-send2 should always be used in conjunction with -t (add msg
+   termination string).
+
+   If -TB is issued, -SEND/-SEND2 and -T are disabled!
+
+991230
+
+   Minor changes to source code to make it compile properly on NetBSD
+   (tnx to VK5ABN).
+
+20000109
+
+   If the original file was already present before decoding AND it was
+   read only, an exception error was cause. Fixed. Wonder why nobody ever
+   noticed that?
+
+20000110
+
+   In most situations (where it makes sense) 7PLUS will now create an
+   alternative name, if the target file already exists.
+
+   E.g.: If the target is FILE.ZIP, it will rename it to FILE$1.ZIP.
+
+   It will not do that when decoding while using -Q.
+
+v2.24
+-----
+20000208
+
+   Limited the max length of original filename to 60 chars. Otherwise,
+   corruption of long filename line in first part could occur.
+
+   Added -SIM option.
+
+   When encoding, 7PLUS will only make a dry run and return the number of
+   parts that would be created and the name of the parts in 7plus.fls.
+   This option is meant for use with programs that act as a shell for 7PLUS.
+   That way, they can check in advance how many parts would be created with
+   given splitparms. This eliminates the need for a shell to do it's own
+   calculations and in case of changes to the format of 7PLUS files in the
+   future, this insures consitent results. Be sure to also check for error
+   codes!
+
+   Changed meaning of %o and %O in format definition. If will now output
+   the full filename of the original file and not the truncated DOS filename.
+
+v2.25
+-----
+20000320
+
+   There seems to be a broken 7PLUS generator out there producing files that
+   will cause a division by zero error when trying to decode them. Because
+   all the checksums are correct, 7PLUS trusted the data and thus did not
+   double check some info in the headers. There never was a need to, untill
+   now.
+
+   Fixed. 7PLUS will now be unaffected by these corrupt files.
+
+
+Remember: Pobody's nerfect and Murphy never sleeps...
+
+73s, Axel. DG1BBQ @DB0VER.#NDS.DEU.EU
+           dg1bbq@gmx.de
+
+Homepage: http://home.t-online.de/~dg1bbq
+*/

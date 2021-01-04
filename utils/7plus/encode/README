@@ -1,0 +1,4 @@
+encode.sh is in this directory for modulaity and shared config.sh 
+stored in the parent dir. encoded files are backed up into a sub
+directory in this one, make the directory 'backups' here or where
+specifcied in the config.sh

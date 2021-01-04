@@ -1,0 +1,12 @@
+- See 7plus.c for notes on how to compile.
+
+- Don't forget to convert line seperators of the source code
+  files to your system's requirements before trying to compile!!
+
+- To unzip correctly on Unix/Linux: unzip -aa 7plxxxsr.zip
+  Line seperators will automatically be converted to LF only.
+
+- Current source code is available at http://home.t-online.de/~dg1bbq
+
+Axel, DG1BBQ @DB0VER.#NDS.DEU.EU
+
