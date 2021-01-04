@@ -19,5 +19,5 @@ importfile="${bpqdir}/Mail/Import/mail.in"
 backupdir="${bpqdir}/7plus/encode/backups"
 #
 #
-tmp="/mnt/camdisk"
+tmp="/tmp"
 #

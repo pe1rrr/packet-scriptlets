@@ -3,6 +3,8 @@ this collection for 7plus handling. the only shipped working script
 so far is the encoder, located in the encode sub directory.
 
 Edit config.sh to your desired path
+However config.sh does presume that this 7plus directory will be put
+in bpq's directory
 
 
 pi7plus is a binary built from the 7plus source code also included
