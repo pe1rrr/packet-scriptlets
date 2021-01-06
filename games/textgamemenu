@@ -1,0 +1,235 @@
+#!/bin/bash
+frotz="dfrotz"
+re='^[0-9]+$'
+quitcmds='^(B|b|q|Q).*$'
+logfile="/tmp/gameusers.log"
+# Our general exit handler
+# TODO: Documentation, but simply set this up as an inetd service and set the port in CMDPORTS in bpq32.cfg
+# then add an APPLICATION line pointing to the CMDPORT offset, see the browse (portal) tool for examples.
+
+# Note: Games not included.
+# Install frotz DUMB mode or else it won't work. May have to compile from sources. default package is not
+# compatible.
+
+set -e
+trap 'catch $? $LINENO' EXIT
+catch() {
+	    if [ "$1" != "0" ]; then
+		        # error handling goes here
+				exit
+      fi
+ }
+
+if [ "$1" == "ip" ]
+then
+	# Connection from inetd client on 'ip' port so standard telnet user is prompted for a callsign.
+	echo "Please enter your callsign:"
+	read callsignin
+elif	[ "$1" == "ax25" ]
+then
+	# Connection came from a linbpq client on 'ax25' port which sends callsign on connect.
+	read callsignin
+fi
+
+# Sanitize the callsign but not necessarily verify it (its only for logging).
+callsign=${callsignin//[$'\t\r\n']} && callsignin=${callsignin%%*( )}
+
+function cols() {
+	logstate="IN"
+	loguser
+	echo "Hello $callsign,"
+        echo "What is your preferred terminal column width? (hit enter for 80):"
+	read COLWIDTHIN
+	COLWIDTH=${COLWIDTHIN//[$'\t\r\n']} && COLWIDTHIN=${COLWIDTHIN%%*( )}
+	if [ -z "$COLWIDTH" ]
+	then
+		COLWIDTH=80
+	fi
+	if [[ $COLWIDTH =~ $quitcmds ]]
+		then 
+		logstate="OUT"
+		loguser
+		exit
+	fi
+	if ! [[ $COLWIDTH =~ $re ]] ; then
+		echo "error: Not a number" >&2; cols
+	fi
+}
+
+function menufooter() {
+	echo "[99] Quit Back to Node"
+	echo "[100] Info on how to save and restore your progress"
+}
+
+function gamelist() {
+	echo List of games available:
+	echo "[1] So You've Never Played A Text?"
+	echo "[2] A Mind Forever Voyaging"
+	echo "[3] Ballyhoo"
+	echo "[4] Cutthroats"
+	echo "[5] Deadline"
+	echo "[6] Enchanted"
+	echo "[7] Hitch Hiker's Guide to the Galaxy"
+	echo "[8] Hollywood Hyjinx"
+	echo "[9] Infidel"
+	echo "[10] The Magic Toy Shop"
+	echo "[11] Moonmist"
+	echo "[15] Planetfall"
+	echo "[16] Plundered Hearts"
+	echo "[20] Quake"
+	echo "[21] Quiddich"
+	echo "[22] Sorcerer"
+	echo "[23] Spellbreaker"
+	echo "[24] Starcross"
+	echo "[25] Stationfall"
+	echo "[27] Wishbringer"
+	echo "[28] The Witness"
+	echo "[29] Xenophobe"
+	echo "[31] Zork I [32] Zork II [33] Zork 3"
+	echo ""
+	echo "[400] Menu - Dutch Language Games"
+	echo ""
+}
+
+
+function menu() {
+	logstate="IN"
+	echo
+	echo "Welcome to Red's Packet Radio Text Adventure Server"
+	echo ""
+	echo "[0] Game List"
+	menufooter
+	gameselect	
+}
+
+function dutchmenu() {
+	echo "--- Nederlanse Spelletjes ---"
+	echo ""
+	echo "[401] Avontuur (Colossal Caves)"
+	echo ""	
+	menufooter
+	gameselect
+}
+
+
+
+
+function loguser() {
+	date=`date`
+	if ! [ -e $logfile ]
+	then
+		touch $logfile
+	fi
+	echo "$date $logstate $callsign" >> $logfile
+}
+function gamesave() {
+	read -d '' saveinfo << EOF || true
+
+	Saving and Loading your progress:
+
+	Most of the games have a progress saving mechanism
+	available via their SAVE and RESTORE commands.
+
+        Note: The command 'save' or 'restore' do not take a parameter.
+              it must be issued on a line within the game, 
+              the game will then prompt for a path.
+
+	Any file with an obvious filename can be loaded by
+	another player, so to make collisions less likely
+	use a filename that incorporates the name of the game,
+	your callsign and a unique secret number and most importantly
+        write it down somewhere!
+
+	Format: /saves/game-callsign-secret
+	E.g: /saves/zork1-pe1rrr-123456 - it IS CaSe SeNsItIvE
+EOF
+	echo "$saveinfo"
+	gameselect
+}
+
+function gameselect() {
+	echo "Enter Choice:"
+	read gamenumin
+	if [[ $gamenumin =~ $quitcmds ]]
+		then 
+		logstate="OUT"
+		loguser
+		exit
+	fi
+	gamenum=${gamenumin//[$'\t\r\n']} && gamenum=${gamenum%%*( )}
+	if ! [[ $gamenum =~ $re ]] ; then
+		   echo "Sorry: Not a valid choice. Please check the list and try again!" >&2; gameselect 
+	fi
+
+	if [ $gamenum -eq 31 ]
+	        then exec $frotz -w $COLWIDTH ~/games/ZORK1.DAT
+	elif [ $gamenum -eq 32 ]
+	        then exec $frotz -w $COLWIDTH ~/games/ZORK2.DAT
+	elif [ $gamenum -eq 33 ]
+	        then exec $frotz -w $COLWIDTH ~/games/ZORK3.DAT
+	elif [ $gamenum -eq 20 ]
+	        then exec $frotz -w $COLWIDTH ~/games/quake.z5
+	elif [ $gamenum -eq 21 ]
+	        then exec $frotz -w $COLWIDTH ~/games/QuidditchFinal1954.zblorb
+	elif [ $gamenum -eq 22 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Sorcerer.dat
+	elif [ $gamenum -eq 23 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Spellbre.dat
+	elif [ $gamenum -eq 24 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Starcros.dat
+	elif [ $gamenum -eq 25 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Stationf.dat
+	elif [ $gamenum -eq 27 ]
+	        then exec $frotz -w $COLWIDTH ~/games/WISHBRIN.DAT
+	elif [ $gamenum -eq 28 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Witness.dat
+	elif [ $gamenum -eq 29 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Xeno.z5
+	elif [ $gamenum -eq 0 ]
+		then gamelist
+	elif [ $gamenum -eq 1 ]
+	        then exec $frotz -w $COLWIDTH ~/games/So_Youve_Never_Played_a_Text.zblorb
+	elif [ $gamenum -eq 2 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Amfv.dat
+	elif [ $gamenum -eq 3 ]
+	        then exec $frotz -w $COLWIDTH ~/games/BALLYHOO.DAT
+	elif [ $gamenum -eq 4 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Cutthroa.dat
+	elif [ $gamenum -eq 5 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Deadline.dat
+	elif [ $gamenum -eq 6 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Enchante.dat
+	elif [ $gamenum -eq 7 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Hitchhik.dat
+	elif [ $gamenum -eq 8 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Hollywoo.dat
+	elif [ $gamenum -eq 9 ]
+	        then exec $frotz -w $COLWIDTH ~/games/INFIDEL.DAT
+	elif [ $gamenum -eq 10 ]
+	        then exec $frotz -w $COLWIDTH ~/games/magic-toyshop.z5
+	elif [ $gamenum -eq 11 ]
+	        then exec $frotz -w $COLWIDTH ~/games/MOONMIST.DAT
+	elif [ $gamenum -eq 15 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Planetfa.dat
+	elif [ $gamenum -eq 16 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Plundere.dat
+	elif [ $gamenum -eq 400 ]
+	        then dutchmenu
+	elif [ $gamenum -eq 401 ]
+	        then exec $frotz -w $COLWIDTH ~/games/Avontuur.z5
+	elif [ $gamenum -eq 99 ]
+		then 
+			logstate="OUT"
+			loguser
+		exit
+	elif [ $gamenum -eq 100 ]
+		then gamesave
+	else
+		gameselect
+	fi
+	menufooter
+	gameselect
+}
+cols
+menu
+gameselect
