@@ -57,7 +57,7 @@ export http_proxy=$myproxy
 ##### End of Config - Do not change anything below here.
 #
 # Global Vars
-LinkRegex='[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
+LinkRegex='[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
 QuitCommandRegex='^(0|q|Q)$'
 MenuCommandRegex='^(m|M)$' 
 ListCommandRegex='^(l|L)$'
