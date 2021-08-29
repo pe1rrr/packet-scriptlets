@@ -380,11 +380,15 @@ function MainMenu() {
 	echo ""
 	echo "[1] Enter your own web address"
 	echo ""
-	echo "Bookmarks"
+	echo "Extreme Weather Resources"
+	echo "[204] HWN Net Activation Status"
+	echo ""
+	echo "COVID"
 	echo "[100] COVID Information gov.uk (UK)"
 	echo "[200] COVID Information CDC (US & Canada)"
 	echo "[400] COVID Information Rijksoverheid (Netherlands)"
 	echo ""
+	echo "Radio Resources"
 	echo "[101] RSGB.org"
 	echo "[202] AMSAT.org"
 	echo "[401] Veron.nl [402] VRZA.nl [403] DARES"
@@ -435,6 +439,10 @@ function MainMenu() {
 	elif [ $Selection -eq 202 ]
 	then
 		URL="https://www.amsat.org"
+		GetPage "${URL}" "MainMenu"
+	elif [ $Selection -eq 204 ]
+	then
+		URL="https://www.hwn.org/policies/activationplans.html"
 		GetPage "${URL}" "MainMenu"
 	elif [ $Selection -eq 400 ]
 	then
