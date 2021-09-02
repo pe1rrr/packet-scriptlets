@@ -169,7 +169,7 @@ function GetPage() {
 	ReferrerURL=$3
 
 	# Generate Initial Page
-	echo "One moment please..."
+	echo "Fetching..."
 	DownloadPage "${URL}" "${ReferrerFunc}" "${ReferrerURL}"
 	Text=$GlobalText # Global Conversion
 	Links=$GlobalLinks # Global Conversion
@@ -283,7 +283,7 @@ function Prompt() {
 
 	# Prompt
 	local MyLinkID
-	echo "Enter Link Number: (Q = quit, L = list links, B = back, N = open new link, M = main menu, R = Redisplay Page)"
+	echo "Enter Link Number: (Q = Quit, L = List Links, B = Back, N = Open New Link, M = Main Menu, R = Redisplay Page)"
 	read MyLinkID
 
 	# Trim Input
@@ -374,98 +374,12 @@ function Prompt() {
 
 }
 
-
 function MainMenu() {
-	echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
-	echo ""
-	echo "[1] Enter your own web address"
-	echo ""
-	echo "Extreme Weather Resources"
-	echo "[204] HWN Net Activation Status"
-	echo ""
-	echo "COVID"
-	echo "[100] COVID Information gov.uk (UK)"
-	echo "[200] COVID Information CDC (US & Canada)"
-	echo "[400] COVID Information Rijksoverheid (Netherlands)"
-	echo ""
-	echo "Radio Resources"
-	echo "[101] RSGB.org"
-	echo "[202] AMSAT.org"
-	echo "[401] Veron.nl [402] VRZA.nl [403] DARES"
-
-	echo "Enter Choice: (Q = quit)"
-
-	local IDRegex
-	local Choice
-	local URL
-
-	read Choice
-
-	# Trim
-	Selection=${Choice//[$'\t\r\n']} && Choice=${Choice%%*( )}
-	IDRegex='^([0-9]|q|Q)+$'
-
-	if ! [[ $Selection =~ $IDRegex ]]
-	then 
-	    echo "Error: Sorry, that selection was not valid, please check and try again."
-	    MainMenu
-	    exit
-	fi
-
-	if [[ $Selection =~ $QuitCommandRegex ]]
-	then
-		Quit
-		exit
-	fi
-
-	if [ $Selection -eq 0 ] 
-	then
-		exit
-	elif [ $Selection -eq 1 ]
-	        then Begin
-		exit
-	elif [ $Selection -eq 100 ]
-	then
-		URL="https://www.gov.uk/guidance/local-restriction-tiers-what-you-need-to-know"
+	        local URL	
+		URL="http://192.168.1.28/~bpq/rrr/index.php?command=mainmenu&category=0"
+		echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
+		echo ""
 		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 101 ]
-	then
-		URL="https://rsgb.org"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 200 ]
-	then
-		URL="https://www.cdc.gov/coronavirus/2019-ncov/index.html"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 202 ]
-	then
-		URL="https://www.amsat.org"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 204 ]
-	then
-		URL="https://www.hwn.org/policies/activationplans.html"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 400 ]
-	then
-		URL="https://www.rijksoverheid.nl/onderwerpen/coronavirus-covid-19"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 401 ]
-	then
-		URL="https://veron.nl"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 402 ]
-	then
-		URL="https://www.VRZA.nl/wp"
-		GetPage "${URL}" "MainMenu"
-	elif [ $Selection -eq 403 ]
-	then
-		URL="https://dares.nl"
-		GetPage "${URL}" "MainMenu"
-	else
-		echo "Error: Sorry, you must make a selection from the menu!"
-		MainMenu
-	fi
-
-
 }
 
 function WelcomeMsg() {
