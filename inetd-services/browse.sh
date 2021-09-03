@@ -7,7 +7,7 @@ LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.5"
+Version="0.2.6"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -102,7 +102,7 @@ function CheckURLSanity() {
 
 	if $CurlBin -H "${UserAgent}" --output /dev/null --silent --head --fail "${CheckURL}"; then
 		ContentType=$($CurlBin -H "${UserAgent}" -s -L -I --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
-		echo "Content: $ContentType"
+		#echo "Content: $ContentType"
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
@@ -177,6 +177,7 @@ function GetPage() {
 	# Display The Page
 	LineCount=0
 	OldIFS=$IFS
+	PageSize=`echo -n $Text | wc -c`
 	IFS='\n'
 	for i in $Text
 	do
@@ -186,7 +187,7 @@ function GetPage() {
 
 	if [ $LineCount -gt $WarningLimit ]
 	then
-		echo "This page is ${LineCount} lines long, are you sure you want to continue? (Y/n)"
+		echo "This page is ${LineCount} lines long (${PageSize} Bytes), are you sure you want to continue? (Y/n)"
 			unset AskThem
 			local AskThem
 			read AskThem
