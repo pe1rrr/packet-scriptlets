@@ -7,7 +7,7 @@ LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.4"
+Version="0.2.5"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -198,10 +198,11 @@ function GetPage() {
 			fi
 	fi
 
-	echo -e "Displaying ${URL}"
+	#echo -e "Displaying ${URL}"
 	echo -e "${Text}"
-	echo -e "The previous page was: ${BackPage}"
+	#echo -e "The previous page was: ${BackPage}"
 
+	BackPage=${ReferrerURL}
 	# Prompt Menu
 	Prompt "${URL}" 
 }
