@@ -7,7 +7,11 @@ LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.6"
+Version="0.2.7"
+
+PortalURL="http://192.168.1.28/~bpq/rrr/index.php?command=mainmenu&category=0"
+# Link to your start page, to use mine, uncomment below:
+#PortalURL="http://static.ehvairport.com:81/~bpq/rrr/index.php?command=mainmenu&category=0"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -239,7 +243,7 @@ function DownloadPage() {
 	fi
 
         local Text
-	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -trim_blank_lines -justify -dump  ${URL} | sed '/^$/d'`
+	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -justify -dump  ${URL} | sed '/^$/d'`
 
 	local Links
 	Links=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
@@ -260,6 +264,7 @@ function DownloadPage() {
 		HttpRegex='(https?.*)' # Barf
 		[[ $Results =~ $IndexRegex ]] && IndexID=`echo ${BASH_REMATCH[0]} | xargs`  # Trim the whitepaces
 		[[ $Results =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
+		HttpURL=`echo $HttpURL | sed -e 's/ /%20/g'` # Fix for URL item with spaces
 		if ! [ -z $IndexID ] # There's always one, grrr. Lynx returns a line "References" before the link list...
 		then
 			GlobalLinksArray[$IndexID]=$HttpURL
@@ -378,7 +383,7 @@ function Prompt() {
 
 function MainMenu() {
 	        local URL	
-		URL="http://192.168.1.28/~bpq/rrr/index.php?command=mainmenu&category=0"
+		URL=$PortalURL
 		echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
 		echo ""
 		GetPage "${URL}" "MainMenu"
