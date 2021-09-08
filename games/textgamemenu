@@ -4,9 +4,9 @@ re='^[0-9]+$'
 quitcmds='^(B|b|q|Q).*$'
 logfile="/tmp/gameusers.log"
 
-# Note: Games not included.
-# Install frotz DUMB mode or else it won't work. May have to compile from sources. default package is not
-# compatible.
+# Install frotz DUMB mode or else it won't work. You will have to compile dfrotz from sources to build the plain
+# text "DUMB" mode, the default package of dfrotz is not compatible with packet radio due to non-ascii based
+# graphics/text.
 
 set -e
 trap 'catch $? $LINENO' EXIT
