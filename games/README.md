@@ -1,13 +1,3 @@
-Documentation:
-
-Here is a menu and a selection of games that I have been running on a node for a while now:
-
-
-https://github.com/pe1rrr/packet-scriptlets/tree/main/games
-
-
-To put it together:
-
 Dfrotz Z-Machine Emulator
 =========================
 
