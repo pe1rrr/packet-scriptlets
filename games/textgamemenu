@@ -3,9 +3,6 @@ frotz="dfrotz"
 re='^[0-9]+$'
 quitcmds='^(B|b|q|Q).*$'
 logfile="/tmp/gameusers.log"
-# Our general exit handler
-# TODO: Documentation, but simply set this up as an inetd service and set the port in CMDPORTS in bpq32.cfg
-# then add an APPLICATION line pointing to the CMDPORT offset, see the browse (portal) tool for examples.
 
 # Note: Games not included.
 # Install frotz DUMB mode or else it won't work. May have to compile from sources. default package is not
@@ -15,7 +12,6 @@ set -e
 trap 'catch $? $LINENO' EXIT
 catch() {
 	    if [ "$1" != "0" ]; then
-		        # error handling goes here
 				exit
       fi
  }
