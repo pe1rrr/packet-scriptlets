@@ -96,4 +96,4 @@ As the game files are owned by `myuserid` rather than the 'zorkuser' ID that dfr
 
 For simplicity, a symlink to the saves directory from the filesystem root is practical to use as it is always require to type out the full path to a save file in dfrotz. It can make it a lot shorter and easier to remember with a symlink. 
 
-ln -s /saves /path/to/actual/saves
+ln -s /path/to/actual/saves /saves
