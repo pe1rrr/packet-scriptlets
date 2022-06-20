@@ -1,5 +1,5 @@
 #!/bin/bash 
-# Version 0.2.4 PE1RRR WEB Portal for Packet
+Version="0.2.8"
 #
 # Configuration
 # 
@@ -7,11 +7,9 @@ LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
-Version="0.2.7"
 
-#PortalURL="http://192.168.1.28/~bpq/rrr/index.php?command=mainmenu&category=0"
-# Link to your start page, to use mine, uncomment below:
-PortalURL="http://static.ehvairport.com:81/~bpq/rrr/index.php?command=mainmenu&category=0"
+# Link to your start page
+PortalURL="http://192.168.1.42/~bpq/"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -93,14 +91,14 @@ function CheckURLSanity() {
 	# Ignore case with ,, below
 	if ! [[ ${CheckURL,,} =~ $LinkRegex ]]
 	then 
-	    ReturnVal="Error: Address provided is not a valid URL"
+	    ReturnVal="Error: not a valid URL"
 	    return 1
 	fi
 
 	# Ignore case with ,, below
 	if [[ ${CheckURL,,} =~ ^(gopher:|mailto:|ftp:|file:).*$ ]]
 	then
-		ReturnVal="Error: That type of URL is not allowed. Supported: http or https."
+		ReturnVal="Error: only http or https."
 		return 1
 	fi
 
@@ -110,12 +108,12 @@ function CheckURLSanity() {
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
 		then
-			ReturnVal="Error: Sorry, that content is not text!"
+			ReturnVal="Error: Not text."
 			return 1
 		fi
 		return 0
  	else
-		ReturnVal="Error: Sorry, ${CheckURL} does not appear to exist."
+		ReturnVal="Error: Page not found"
 		return 1
 	fi	
 
@@ -133,7 +131,7 @@ function Begin() {
 	local Text
 
 	Referrer="Begin"
-	echo "Enter a web address (Q = quit, M = main menu):"
+	echo "Web address: (Q)uit, (M)enu"
 	read Address
 
 	# Trim Input
@@ -153,7 +151,7 @@ function Begin() {
 		URL="http://${URLFix}"
 	fi
 
-	echo "Requesting ${URL}..."
+	#echo "Requesting ${URL}..."
 
 	# Update Last Page Global
 	BackPage="${URL}"
@@ -173,7 +171,8 @@ function GetPage() {
 	ReferrerURL=$3
 
 	# Generate Initial Page
-	echo "Fetching..."
+	echo "Bookmark URL: ${URL}"
+	echo "'N' to open again"
 	DownloadPage "${URL}" "${ReferrerFunc}" "${ReferrerURL}"
 	Text=$GlobalText # Global Conversion
 	Links=$GlobalLinks # Global Conversion
@@ -191,7 +190,7 @@ function GetPage() {
 
 	if [ $LineCount -gt $WarningLimit ]
 	then
-		echo "This page is ${LineCount} lines long (${PageSize} Bytes), are you sure you want to continue? (Y/n)"
+		echo "Request ${LineCount} lines (${PageSize} Bytes), continue? (Y/n)"
 			unset AskThem
 			local AskThem
 			read AskThem
@@ -290,7 +289,7 @@ function Prompt() {
 
 	# Prompt
 	local MyLinkID
-	echo "Enter Link Number: (Q = Quit, L = List Links, B = Back, N = Open New Link, M = Main Menu, R = Redisplay Page)"
+	echo "Enter Link ID: (Q)uit, (L)inks, (B)ack, (N)ew, (M)enu, (R)edisplay"
 	read MyLinkID
 
 	# Trim Input
@@ -309,7 +308,7 @@ function Prompt() {
 		LinkCount=${#GlobalLinksArray[*]}
 		if [ $LinkCount -gt $WarningLimit ]
 		then 
-			echo "The link list is ${LinkCount} lines long, are you sure you want to continue? (Y/n)"
+			echo "Link list ${LinkCount} entries, continue? (Y/n)"
 			unset AskThem
 			local AskThem
 			read AskThem
@@ -384,7 +383,7 @@ function Prompt() {
 function MainMenu() {
 	        local URL	
 		URL=$PortalURL
-		echo "This portal is a work in progress. Please report bugs to pe1rrr@pe1rrr.#nbw.nld.euro"
+		echo "Bugs to pe1rrr@amsat.org / pe1rrr@pe1rrr.#nbw.nld.euro"
 		echo ""
 		GetPage "${URL}" "MainMenu"
 }
@@ -392,8 +391,8 @@ function MainMenu() {
 function WelcomeMsg() {
 	local Callsign
 	Callsign=$1
-	echo "Hello ${Callsign}, welcome to Simple Packet Web - by PE1RRR Version ${Version}"
-	echo "All requests are logged, inappropriate sites are blocked by OpenDNS FamilyShield"
+	echo "Hello ${Callsign}, Shortwave Web by PE1RRR V${Version}"
+	echo "Please be responsible."
 	return 0
 }
 
