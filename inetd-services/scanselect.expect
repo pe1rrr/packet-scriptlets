@@ -1,0 +1,61 @@
+#!/usr/bin/expect 
+set timeout 15
+
+set host [lindex $argv 0]
+set port [lindex $argv 1]
+set login [lindex $argv 2]
+set password [lindex $argv 3]
+set radio [lindex $argv 4]
+set frequency [lindex $argv 5]
+set scan [lindex $argv 6]
+
+log_user 0
+if { "$scan" == "start" } {
+	#send_user "Attempting Scan Start..\r\n"
+	set scantype  "scanstart"
+} elseif { "$scan" == "stop" } {
+	#send_user "Attempting Scan Stop..\r\n"
+	set scantype "scanstop"
+} else {
+	send_user "Syntax Error\r\n"
+	exit
+}
+	
+spawn telnet $host $port
+
+expect "callsign:"
+send "$login\r"
+
+expect "password:"
+send "$password\r"
+
+expect "Connected," { send "PASSWORD\r"; }
+
+expect { 
+	"Ok"         { send "radio $radio $scantype\r"; }
+}
+
+expect { 
+	"Ok" { send_user "$scantype selected...\r\n"  }
+        -re {.+(Radio\ not\ responding)} { send_user "Failed: sorry - Radio not responding\r\n"; send "B\r"; exit }
+        -re {.+(Sorry\ no\ Scan\ List\ defined\ for\ this\ port)} { send_user "Notice: Port $radio Controlling the radio has no scanlist configured... Continuing\r\n"; }
+}
+
+send "radio $radio $frequency \r" 
+expect {
+        -re {.+(Radio\ not\ responding)} { send_user "Radio Comm Fault - Suggestion: Restart BPQ\r\n";  exit }
+        -re {.+(Set\ Freq\ and\ Mode\ OK)} {  #send_user "Frequency $frequency Set OK, Radio Port $radio seems to be OK\r\n" }
+	-re {.+(Invalid\ Frequency)} { send_user "Frequency Fault\r\n";  exit }
+}		
+
+log_user 0
+send "radio $radio freq\r" 
+
+expect {
+        -re {.+(Radio\ not\ responding)} { send_user "Radio Comm Fault - Suggestion: Restart BPQ\r\n"; send "B\r"; exit }
+	-re {.+(Frequency\ is)(.+)} {  send_user "\r\n" }
+}
+set checkfreq $expect_out(2,string)
+send_user "Radio Port $radio Returned Frequency: $checkfreq\r\n"
+
+exit

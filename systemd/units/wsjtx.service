@@ -1,0 +1,20 @@
+[Unit]
+Description=WSJTX Start Script by PE1RRR
+After=vvnc-modems.service
+Wants=vvnc-modems.service
+Conflicts=vara.service qtsm.service ardop.service ardop-gui.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/bin
+Restart=always
+RestartSec=20
+StartLimitInterval=60
+StartLimitBurst=3
+User=pi
+Group=pi
+ExecStart=/home/pi/bin/startwsjtx
+SyslogIdentifier=WSJTX
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Change working directory to where QtTermTCP.ini is
+cd /home/pi/bin
+
+# Set the display number here. If HDMI connected monitor, # this is usually :0
+# For VNC sessions, this is determined in the desktop-
+# check it with echo $DISPLAY in a shell within the VNC.
+
+DISPLAY=:2
+export DISPLAY
+/usr/bin/wsjtx -r ic703

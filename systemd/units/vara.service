@@ -1,0 +1,21 @@
+[Unit]
+Description=VARA Start Script by PE1RRR
+After=vvnc-modems.service
+Wants=vvnc-modems.service varawatch.service
+BindsTo=audiosnoop.service 
+Conflicts=wsjtx.service
+[Service]
+Type=forking
+WorkingDirectory=/home/pi/bin
+Restart=always
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=12
+User=pi
+Group=pi
+ExecStart=/usr/bin/screen -S VARA-Console -d -m /home/pi/bin/startvara
+ExecStop=/usr/local/bin/wineserver -k
+SyslogIdentifier=VARA-Debug
+
+[Install]
+WantedBy=multi-user.target

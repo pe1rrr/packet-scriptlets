@@ -1,0 +1,10 @@
+#!/bin/bash
+cd /home/pi/bin
+
+# Set the display number here. If HDMI connected monitor, this is usually :0
+# For VNC sessions, this is determined in the desktop- check it with
+# echo $DISPLAY in a shell within the VNC.
+DISPLAY=:2
+export DISPLAY
+/home/pi/bin/piARDOP_GUI 
+

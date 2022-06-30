@@ -1,0 +1,27 @@
+#!/usr/bin/expect 
+log_user 0
+set timeout 15
+
+set host [lindex $argv 0]
+set port [lindex $argv 1]
+set login [lindex $argv 2]
+set password [lindex $argv 3]
+
+spawn telnet $host $port
+set timeout 5
+
+expect "callsign:"
+send "$login\r"
+
+expect "password:"
+send "$password\r"
+
+expect "Connected," { send "nodes\r" }
+
+expect {
+	"Nodes"
+}
+
+log_user 1
+expect eof
+

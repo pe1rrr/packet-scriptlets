@@ -1,0 +1,20 @@
+[Unit]
+Description=ARDOP GUI Start Script by PE1RRR
+After=vvnc-modems.service
+Wants=ardop.service
+Conflicts=wsjtx.service
+
+[Service]
+Type=forking
+WorkingDirectory=/home/pi/bin
+Restart=always
+RestartSec=20
+StartLimitInterval=60
+StartLimitBurst=3
+User=pi
+Group=pi
+ExecStart=/usr/bin/screen -S ARDOPGUI-Console -d -m /home/pi/bin/startARDOP_GUI
+SyslogIdentifier=ARDOP-GUI-Debug
+
+[Install]
+WantedBy=multi-user.target

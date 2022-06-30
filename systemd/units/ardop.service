@@ -1,0 +1,19 @@
+[Unit]
+Description=ARDOP Start Script by PE1RRR
+After=network.target
+Conflicts=wsjtx.service
+
+[Service]
+Type=forking
+WorkingDirectory=/home/pi/bin
+Restart=always
+RestartSec=20
+StartLimitInterval=60
+StartLimitBurst=3
+User=pi
+Group=pi
+ExecStart=/usr/bin/screen -S ARDOP-Console -d -m /home/pi/bin/startardop
+SyslogIdentifier=ARDOP-Debug
+
+[Install]
+WantedBy=multi-user.target

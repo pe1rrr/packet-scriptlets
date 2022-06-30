@@ -1,0 +1,15 @@
+#!/bin/bash
+cd /home/pi/bin
+
+
+# Launch invisibly
+#/home/pi/bin/SM nogui
+
+# Launch with GUI
+# Set the display number here. If HDMI connected monitor, this is usually :0
+# For VNC sessions, this is determined in the desktop- check it with
+# echo $DISPLAY in a shell within the VNC.
+DISPLAY=:2
+export DISPLAY
+/home/pi/bin/SM 
+

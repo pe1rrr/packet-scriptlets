@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /home/pi/bin
+DISPLAY=:2
+export DISPLAY
+/usr/local/bin/wine /home/pi/.wine/drive_c/VARA/VARA.exe

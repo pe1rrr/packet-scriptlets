@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /home/pi/bin/
+/home/pi/bin/piardopc 8515 ARDOP2IN ARDOP2OUT

@@ -1,0 +1,3 @@
+#!/bin/bash
+vncserver -kill :2
+vncserver :2 -geometry 1080x764
