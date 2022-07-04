@@ -1,0 +1,29 @@
+#!/usr/bin/expect 
+log_user 0
+set timeout 15
+
+set host [lindex $argv 0]
+set port [lindex $argv 1]
+set login [lindex $argv 2]
+set password [lindex $argv 3]
+set tncport [lindex $argv 4]
+
+spawn telnet $host $port
+set timeout 5
+
+expect "callsign:"
+send "$login\r"
+
+expect "password:"
+send "$password\r"
+
+expect "Connected," { send "AT $tncport\r" }
+
+log_user 0
+expect {
+	"Ok" { send "D\r\rB\r"; send_user "Nothing to do\r\n"; exit 1 }
+	-re {.+(TNC\ Not\ Ready)} { exit 0; }
+	-re {.+(Port\ in\ use)} { send "B\r"; send_user "Port in use\r\n"; exit 1}
+}
+expect eof
+
