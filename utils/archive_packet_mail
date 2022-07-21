@@ -52,7 +52,7 @@
 infiledir="/home/bpq/nodes/pe1rrr/fbb/var/ax25/fbb/export"
 
 # Directory where you want to store the week-based archives:
-exportdir="/home/bpq/common/fbbdos/pub/archived/bbs_mail/ham"
+exportdir="/home/bpq/common/fbbdos/archived/bbs_mail/ham"
 
 # Usage: <specify export file>
 # e.g ./archive_packet_mail nld_bulls.out

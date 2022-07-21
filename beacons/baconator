@@ -8,7 +8,7 @@ ArtDir="/home/bpq/nodes/pe1rrr/beacons/arts"
 BeaconFile="/home/bpq/nodes/pe1rrr/beacons/art.txt"
 
 # You may enter a short signature or omit it entirely, it is appended to the end of the beacon.
-Signature="73 de PE1RRR"
+Signature=""
 
 # Put an entry into the crontab (crontab -e) to run every minute, note if you are using an
 # SD Card system you make want to make it write less frequently. 
@@ -17,13 +17,14 @@ Signature="73 de PE1RRR"
 
 OldIFS=$IFS
 
-for i in `ls ${ArtDir}`
+for i in `find ${ArtDir} -maxdepth 1 -type f `
 do
 IFS='§'
-	 Beacon+=("`cat ${ArtDir}/$i`")
+	 Beacon+=("`cat $i`")
 done
-
 rand=$[$RANDOM % ${#Beacon[@]}]
-echo ${Beacon[$rand]}  > ${BeaconFile}
+echo "$rand"
+echo ${Beacon[$rand]} > ${BeaconFile}
+echo ${Beacon[$rand]} 
 echo "${Signature}" >> ${BeaconFile}
 IFS=$OldIFS

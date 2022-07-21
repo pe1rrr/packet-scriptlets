@@ -1,9 +1,9 @@
 #!/bin/bash
-script="/home/bpq/nodes/pe1rrr/scripts/nonodes.expect"
-user="pe1rrr"
-pass="hereBdragonsmaybe!"
-host="gigabox"
-port="2323"
+script="/home/pi/nodes/pe1rrr/scripts/nonodes.expect"
+user="mycall"
+pass="mypassword"
+host="127.0.0.1"
+port="8010"
 
 
 OldIFS=$IFS

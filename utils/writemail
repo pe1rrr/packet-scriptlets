@@ -5,20 +5,14 @@
 OutDir="/home/bpq/msgs"
 Temp="/tmp"
 
-if [ -z "$1" ]
-then
 	echo "Please specify which BBS you are sending from"
 	read ThisBBS
-else
-	ThisBBS=$1
-fi
-if [ -z "$2" ]
-then
-	echo "Please specify your callsign"
+	ThisBBS=`echo $ThisBBS | tr [:lower:] [:upper:]`
+	echo "OK $ThisBBS"
+	echo "Please also specify your callsign"
 	read MyCall
-else
-	MyCall=$2
-fi
+	MyCall=`echo $MyCall | tr [:lower:] [:upper:]`
+	echo "OK $MyCall"
 
 SignatureFile="/home/bpq/.${MyCall}.sig"
 ImportFileDir="/home/bpq/nodes/$ThisBBS/fbb/var/ax25/fbb/mail"
@@ -101,7 +95,7 @@ function MakeMail() {
 
 OldIFS=$IFS
 IFS='' read -r -d '' Template <<"EOF"
-SB TMPTO @ TMPAT  < TMPMYCALL
+STMPTYPE TMPTO @ TMPAT  < TMPMYCALL $TMPBID_TMPMYCALL
 TMPSUBJECT
 TMPMAIL
 TMPSIGNATURE
@@ -126,6 +120,8 @@ IFS=$OldIFS
 	MsgPath="${OutDir}/msg_${Tag}"
 	IFS=$'\n'
 	printf "%s\n"  $Template |  sed \
+			-e "s/TMPTYPE/${Type}/g" \
+			-e "s/TMPBID/${Bid}/g" \
 			-e "s/TMPTO/${MyDest}/g" \
 			-e "s/TMPAT/${At}/g" \
 		       	-e "s/TMPMYCALL/${MyCall}/g" \
@@ -179,7 +175,8 @@ function WriteMail() {
 }
 
 
-Tag=`echo $(openssl rand -hex 9)`
+Bid=`echo $(openssl rand -hex 2) | tr [:lower:] [:upper:]`
+Tag=$Bid
 Filename="${Temp}/msg_${Tag}"
 
 Prompt

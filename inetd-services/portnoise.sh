@@ -15,12 +15,23 @@ TMPDir="${RRDDir}/tmp"
 #
 declare -A Ports
 
-Ports[2]="APRS 144.800MHz"
-Ports[3]="IC756 Pro Net105 50w"
-Ports[4]="IC756 Pro BBS Fwd 50w"
+Ports[1]="IC756 AX300 Port 1"
+Ports[2]="IC756 AX300 Port 2"
+Ports[3]="IC756 VARA"
+Ports[4]="IC756 ARDOP"
+Ports[5]="G90 AX300 Port 1"
+Ports[6]="G90 AX300 Port 2"
+Ports[7]="G90 VARA"
+Ports[8]="G90 ARDOP"
+Ports[21]="IC703 AX300 Port 1"
+Ports[22]="IC703 AX300 Port 2"
+Ports[23]="IC703 VARA"
+Ports[24]="IC703 ARDOP"
 Ports[10]="Telnet"
 Ports[11]="AX/UDP"
 Ports[12]="AX/IP"
+Ports[15]="APRS 144.800MHz"
+Ports[16]="KISS_TCP"
 
 # Globals
 QuitRegex='^(Q|q|B|b)$'
@@ -32,13 +43,12 @@ function PortMenu() {
 	echo "...it thickens!"
 	echo ""
 	echo "Welcome, please choose a port:"
-	echo "[2]  APRS 144.800 Mhz"
-	echo "[3]  HF /Net105/ 14.1022 USB @ 1100hz Center"
-	echo "[4]  HF BBS Fwd 14.1022 USB @ 2000hz Center"
-	echo "[10] Telnet Interface"
-	echo "[11] Internet AXUDP Links"
-	echo "[12] Internet AXIP Proto 93 Links"
-	echo ""
+	echo "AX300 Packet: 1,2,5,6,21,22"
+	echo "VARA: 3,7,23"
+	echo "ARDOP: 4,8,24"
+	echo "AXIP: 11,12"
+	echo "Telnet: 10"
+	echo "APRS: 15"
 	Prompt
 }
 
@@ -61,7 +71,7 @@ function Prompt() {
 	fi
 
 
-	if [[ ${Choice} =~ ^(2|3|4|5|6|10|11|12)$ ]];
+	if [[ ${Choice} =~ ^(1|2|3|4|5|6|7|8|10|11|12|15|16)$ ]];
 	then
 		AsciiPort "${Choice}"
 	else

@@ -22,7 +22,7 @@
 # ****
 
 IpAddr="192.168.1.9"
-PortList="2,3,4,5,10,11,12"
+PortList="1,2,3,4,5,6,7,8,10,11,12,15,16,21,22,23,24"
 Field_Separator=$IFS
 RRDDir="/home/bpq/nodes/pe1rrr/rrd"
 

@@ -24,6 +24,7 @@ expect {
 	"Ok" { send "D\r\rB\r"; send_user "Nothing to do\r\n"; exit 1 }
 	-re {.+(TNC\ Not\ Ready)} { exit 0; }
 	-re {.+(Port\ in\ use)} { send "B\r"; send_user "Port in use\r\n"; exit 1}
+	-re {.+(is\ in\ use)} { send "B\r"; send_user "Interlocked Port in use\r\n"; exit 1}
 }
 expect eof
 
