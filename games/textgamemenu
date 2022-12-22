@@ -1,4 +1,5 @@
 #!/bin/bash
+
 frotz="dfrotz"
 re='^[0-9]+$'
 quitcmds='^(B|b|q|Q).*$'
@@ -7,6 +8,20 @@ logfile="/tmp/gameusers.log"
 # Install frotz DUMB mode or else it won't work. You will have to compile dfrotz from sources to build the plain
 # text "DUMB" mode, the default package of dfrotz is not compatible with packet radio due to non-ascii based
 # graphics/text.
+
+
+# 2022-12-21
+# If using LinBPQ to provide this as a service, use the CMDPORT/HOST method
+# to set an APPLICATION line instead of using the ATTACH method as the latter
+# method does not handle the linefeeds with the inetd daemon properly.
+
+# APPLICATION 10,GAMES,C 10 HOST 0 S,PE1RRR-6,GAMES,254
+
+# Under TELNET porti CONFIG declaration:
+# CMDPORT=62000 
+# The first port in this list is equal to offset param "0" for after the HOST in
+# the APPLICATION line above.
+
 
 set -e
 trap 'catch $? $LINENO' EXIT
@@ -30,7 +45,7 @@ fi
 # Sanitize the callsign but not necessarily verify it (its only for logging).
 callsign=${callsignin//[$'\t\r\n']} && callsignin=${callsignin%%*( )}
 
-function cols() {
+function width() {
 	logstate="IN"
 	loguser
 	echo "Hello $callsign,"
@@ -48,7 +63,7 @@ function cols() {
 		exit
 	fi
 	if ! [[ $COLWIDTH =~ $re ]] ; then
-		echo "error: Not a number" >&2; cols
+		echo "error: Not a number" >&2; width
 	fi
 }
 
@@ -226,6 +241,6 @@ function gameselect() {
 	menufooter
 	gameselect
 }
-cols
+width
 menu
 gameselect
