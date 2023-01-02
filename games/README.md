@@ -62,7 +62,7 @@ Where `4` is the offset meaning port 63002 (CMDPORT begins at zero) in the above
 
 Where `10` is the `PORTNUM` of your BPQ telnet port.
 
-The ATTACH method DOES NOT WORK.
+The ATTACH method *DOES NOT WORK*. So do NOT use the example below.
 
 `APPLICATION 7,GAMES,ATTACH 10 127.0.0.1 63002 S` 
 
