@@ -132,7 +132,7 @@ function Begin() {
 	local Text
 
 	Referrer="Begin"
-	echo "Web address: (Q)uit, (M)enu"
+	echo "Enter URL (http:// or https://):"
 	read Address
 
 	# Trim Input
