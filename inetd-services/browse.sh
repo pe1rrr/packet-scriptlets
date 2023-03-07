@@ -1,5 +1,21 @@
 #!/bin/bash 
-Version="0.3.0"
+#
+# Copyright 2019-2023 Red Tuby PE1RRR
+#
+# browse.sh is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LinBPQ/BPQ32 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with browse.sh.  If not, see http://www.gnu.org/licenses
+
+Version="0.3.1 by PE1RRR"
 #
 # Configuration
 # 
@@ -67,7 +83,7 @@ BackCommandRegex='^(B|b)$'
 NewCommandRegex='^(n|N)$'
 RedisplayCommandRegex='^(r|R)$'
 HelpCommandRegex='^(h|H)$'
-WarningLimit=30
+WarningLimit=40
 BackPage="none"
 Referrer="none"
 declare -A GlobalLinksArray # I'm an associative array!
@@ -291,7 +307,7 @@ function Prompt() {
 
 	# Prompt
 	local MyLinkID
-	echo "Enter Command or a Link number (H for help):"
+	echo "[H] for Help -->"
 	read MyLinkID
 
 	# Trim Input
@@ -338,21 +354,21 @@ function Prompt() {
 	then
 		# Do not remove credit to author from this text.
 		echo -e "This is a text based web-browser created for"
-		echo -e "use via packet radio by PE1RRR"
+		echo -e "       use via packet radio by PE1RRR"
 		echo -e ""
-		echo -e "Links to other pages are shown in brackets []"
-		echo -e "View a link by sending only the number"
-		echo -e "e.g: 1"
-		echo -e "If the page is larger than ${WarningLimit} lines"
-		echo -e "you will be asked if you still want to continue"
+		echo -e "Navigate pages using the number highlighted between [ ]"
+		echo -e "To view a particular page, enter just the page number."
+		echo -e ""
+		echo -e "If the page is longer than ${WarningLimit} lines, you"
+		echo -e "will be prompted with the choice to continue or not."
 		echo -e ""
 		echo -e "Commands:"
-		echo -e "B - Back, (if possible)"
+		echo -e "B - Back to previous page"
 		echo -e "H - This text"
-		echo -e "L - List, display links belonging to the numbers"
-		echo -e "N - New, enter your own web address"
-		echo -e "M - Menu, go back to start page"
-		echo -e "Q - Quit, exit browser"
+		echo -e "L - List hyperlinks associated with the numbers"
+		echo -e "N - Navigate to a custom web address/hyperlink/URL"
+		echo -e "M - Main Menu"
+		echo -e "Q - Quit"
 		echo -e ""
 
 		Prompt "${URL}"
@@ -414,6 +430,7 @@ function WelcomeMsg() {
 	local Callsign
 	Callsign=$1
 	echo "Hi ${Callsign}, WWW V${Version}"
+	echo "Page navigation numbers are highlighted with [ ]"
 	return 0
 }
 
