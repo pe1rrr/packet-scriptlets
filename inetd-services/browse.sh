@@ -352,10 +352,6 @@ function Prompt() {
 		Prompt "${URL}"
 	elif [[ $LinkIDFix =~ $HelpCommandRegex ]] 
 	then
-		# Do not remove credit to author from this text.
-		echo -e "This is a text based web-browser created for"
-		echo -e "       use via packet radio by PE1RRR"
-		echo -e ""
 		echo -e "Navigate pages using the number highlighted between [ ]"
 		echo -e "To view a particular page, enter just the page number."
 		echo -e ""
