@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 #
 # Copyright 2019-2023 Red Tuby PE1RRR
 #
@@ -15,17 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with browse.sh.  If not, see http://www.gnu.org/licenses
 
-Version="0.3.1 by PE1RRR"
+Version="0.3.3a by PE1RRR updated Friday 2023-03-10"
 #
 # Configuration
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
 UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
-WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser; sudo chmod bpq:bpq /var/log/bpq-browser
+WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser.log; sudo chown pi:pi /var/log/bpq-browser.log
 
 # Link to your start page
-PortalURL="http://192.168.1.42/~bpq/"
+PortalURL="http://static.ehvairport.com/~bpq/"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -34,6 +34,7 @@ PortalURL="http://192.168.1.42/~bpq/"
 
 myproxy="http://127.0.0.1:3128"
 export http_proxy=$myproxy
+export https_proxy=$myproxy
 # 
 # Usage & Installation
 #
@@ -75,27 +76,34 @@ export http_proxy=$myproxy
 ##### End of Config - Do not change anything below here.
 #
 # Global Vars
-LinkRegex='[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
-QuitCommandRegex='^(0|q|Q)$'
-MenuCommandRegex='^(m|M)$' 
-ListCommandRegex='^(l|L)$'
-BackCommandRegex='^(B|b)$'
-NewCommandRegex='^(n|N)$'
-RedisplayCommandRegex='^(r|R)$'
-HelpCommandRegex='^(h|H)$'
-WarningLimit=40
-BackPage="none"
+LinkRegex='[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*)'
+QuitCommandRegex='^(0|q|b)$'
+MenuCommandRegex='^(m)$' 
+ListCommandRegex='^(l)$'
+BackCommandRegex='^(p)$'
+FullCommandRegex='^(f)$'
+OptionPagingRegex='^(op)(\ )([0-9]{1,2})$'
+NewLinkRegex="^(n)(\ )(${LinkRegex})"
+SearchRegex='^(s)(\ )([a-zA-Z0-9@:%\._\+~#=].+)'
+RedisplayCommandRegex='^(r)$'
+HelpCommandRegex='^(h|\?)$'
+WarningLimit=10
 Referrer="none"
-declare -A GlobalLinksArray # I'm an associative array!
+
+declare -A GlobalLinkArray # I'm an associative array!
+GlobalTextString=""
 
 set -e
 trap 'catch $? $LINENO' EXIT
 catch() {
-	    if [ "$1" != "0" ]; then
-		        # error handling goes here
-				exit
-      fi
- }
+	if [ "$1" != "0" ]; 
+	then
+		# error handling goes here
+		echo "Unexpected Error! Restarting..."
+		Prompt "${PortalURL}"
+		exit
+      	fi
+}
 
 
 
@@ -108,14 +116,14 @@ function CheckURLSanity() {
 	# Ignore case with ,, below
 	if ! [[ ${CheckURL,,} =~ $LinkRegex ]]
 	then 
-	    ReturnVal="Error: not a valid URL"
+	    ReturnVal="Error: Not a valid URL"
 	    return 1
 	fi
 
 	# Ignore case with ,, below
 	if [[ ${CheckURL,,} =~ ^(gopher:|mailto:|ftp:|file:).*$ ]]
 	then
-		ReturnVal="Error: only http or https."
+		ReturnVal="Error: Only http or https."
 		return 1
 	fi
 
@@ -141,91 +149,177 @@ function Quit() {
 	exit
 }
 
-function Begin() {
+function OptionPaging() {
+	local PageSize
+	local PageSizeClean
+	local Referrer
+
+	PageSize=$1
+	Referrer=$2
+	PageSizeClean=${PageSize//[$'\t\r\n']} && PageSize=${PageSize%%*( )}
+
+	[[ $PageSizeClean =~ $OptionPagingRegex ]] && WarningLimit=`echo  ${BASH_REMATCH[3]}`
+	echo "Paging is $WarningLimit lines per page"
+	Prompt "${Referrer}"
+}
+
+
+function Search() {
+	local Query
+	local QueryURL
+	local Referrer
+	Referrer="$1"
+
+	[[ $ChoiceClean =~ $SearchRegex ]] && Query=`echo  ${BASH_REMATCH[3]}`
+	echo "Note: Search relies on a 3rd party and may not work."
+	echo "Results transmitted OTA are the responsibility of the requester."
+	echo "Processing: $Query. Please wait."
+	
+	Query=`echo $Query | sed -e 's/ /%20/g'` 
+	Query=`echo $Query | sed -e 's/\"/%22/g'` 
+	Query=`echo $Query | sed -e 's/\&/%26/g'` 
+	QueryURL="http://lite.duckduckgo.com/lite/?&q=${Query}"
+
+	FetchPage "${QueryURL}" "${QueryURL}"
+
+	# Prompt Menu
+	Prompt "$Referrer" 
+}
+
+function NewLink() {
 	local Address
+	local Referrer
 	local URL
 	local URLFix
 	local Text
 
-	Referrer="Begin"
-	echo "Enter URL (http:// or https://):"
-	read Address
-
+	local Query
+	local QueryURL
+	 [[ $ChoiceClean =~ $NewLinkRegex ]] && Address=`echo  ${BASH_REMATCH[3]}`
+	
 	# Trim Input
 	URLFix=${Address//[$'\t\r\n']} && Address=${Address%%*( )}
 
-	if [[ $URLFix =~ $QuitCommandRegex ]]
-	then
-		Quit
-		exit
-	elif [[ $URLFix =~ $MenuCommandRegex ]]
-	then
-		MainMenu
-	elif [[ $URLFix =~ ^https?:\/\/ ]]
+	if [[ $URLFix =~ ^https?:\/\/ ]]
 	then
 		URL="${URLFix}"
 	else
 		URL="http://${URLFix}"
 	fi
 
-	#echo "Requesting ${URL}..."
+	echo "Processing ${URL}... please wait."
 
 	# Update Last Page Global
-	BackPage="${URL}"
 
 	LogUser "${Address}"
-	GetPage "${URL}" "Begin" "${URL}"
+	FetchPage "${URL}" "${Referrer}"
 }
 
-function GetPage() {
+function FetchPage() {
+	# Menu->[FetchPage->DownloadPage]->DisplayPage
+	echo "Wait..."
 	local URL
-	local ReferrerFunc
-	local ReferrerURL
+	local Referrer
 	local Links
 
 	URL=$1
-	ReferrerFunc=$2
-	ReferrerURL=$3
+	Referrer=$2
 
-	# Generate Initial Page
-	#echo "Bookmark URL: ${URL}"
-	#echo "'N' to open again"
-	DownloadPage "${URL}" "${ReferrerFunc}" "${ReferrerURL}"
-	Text=$GlobalText # Global Conversion
-	Links=$GlobalLinks # Global Conversion
+	# Fetch Page and populate Global arrays.
+	DownloadPage "${URL}" "${Referrer}"
 
 	# Display The Page
 	LineCount=0
-	OldIFS=$IFS
-	PageSize=`echo -n $Text | wc -c`
-	IFS='\n'
-	for i in $Text
-	do
-		LineCount=$((LineCount+1))
-	done
-	IFS=$OldIFS
+	PageBytes=`echo -n "${GlobalTextArray[@]}" | wc -c`
+	LineCount=${#GlobalTextArray[*]}
 
 	if [ $LineCount -gt $WarningLimit ]
 	then
-		echo "Request ${LineCount} lines (${PageSize} Bytes), continue? (Y/n)"
+		echo "Display ${LineCount} lines (${PageBytes} Bytes), continue? (y/N)"
 			unset AskThem
 			local AskThem
 			read AskThem
+			AskThem=`echo $AskThem | tr '[:upper:]' '[:lower:]'`
 			AskThemClean=${AskThem//[$'\t\r\n']} && AskThem=${AskThem%%*( )}
-			if ! [[ $AskThemClean =~ ^(Y|y).*$ ]]
+			if ! [[ $AskThemClean =~ ^(y).*$ ]]
 			then
-				echo "Okay lets not do that then..."
-				Prompt "${URL}"
+				echo "Use [R] if you change your mind... (Redisplay)"
+				Prompt "${Referrer}"
 			fi
 	fi
 
-	#echo -e "Displaying ${URL}"
-	echo -e "${Text}"
-	#echo -e "The previous page was: ${BackPage}"
+	DisplayPage "${URL}" "${Referrer}" 
+}
 
-	BackPage=${ReferrerURL}
-	# Prompt Menu
-	Prompt "${URL}" 
+function DisplayPage() {
+	# Menu->FetchPage->[DisplayPage]
+	local OldIFS
+	local OutCount
+        local AbortState
+        local AbortStateClean
+	local TotalCount
+	local Output
+	local CancelPaging
+	local URL
+	local Referrer
+
+	URL=$1
+	Referrer=$2
+
+	echo -e "Displaying ${URL}"
+
+	OutCount=0
+	TotalCount=0
+	if [[ ${FetchFullText} == "1" ]]
+	then
+		echo -e "$GlobalFullTextString"
+
+	else
+	OldIFS=$IFS
+	IFS=$'\n'
+	for Output in "${GlobalTextArray[@]}"
+	do
+		if [ $OutCount -eq $WarningLimit ] && [ "$CancelPaging" != "1" ]
+		then
+			echo "ENTER = continue, A = Abort, C = Cancel Paging, [Line ${TotalCount}/${LineCount}]"
+			#echo "OP <1-99> = Set Pagesize."
+			read AbortState
+			AbortState=`echo $AbortState | tr '[:upper:]' '[:lower:]'`
+			AbortStateClean=${AbortState//[$'\t\r\n']} && AbortState=${AbortState%%*( )}
+			if [[ $AbortStateClean =~ ^(a|q)$ ]]
+			then
+				echo "Output Aborted!"
+				Prompt "${Referrer}"
+			elif [[ $AbortStateClean =~ ^(n)$ ]]
+			then
+				OutCount=0
+			elif [[ $AbortStateClean =~ ^(c)$ ]]
+			then
+				echo "Cancelled paging... displaying rest of page"
+				CancelPaging=1
+				continue
+			elif [[ $AbortStateClean =~ $OptionPagingRegex ]]
+			then
+				OptionPaging "${AbortStateClean}" "${Referrer}"
+				OutCount=0
+			elif [[ $AbortStateClean =~ ^([0-9]{1,4})$ ]]
+			then
+				# Load a page directly from the paged list
+				LoadPage "${AbortStateClean}" "${Referrer}"
+			else
+				# Treat anything else, like Enter, as a nope.
+				OutCount=0
+			fi
+		fi
+		echo "$Output"
+		OutCount=$((OutCount+1))
+		TotalCount=$((TotalCount+1))
+	done
+	fi
+
+	CancelPaging=0
+	IFS=$OldIFS
+	Prompt "${Referrer}"
 }
 
 function LogUser() {
@@ -244,114 +338,176 @@ function LogUser() {
 
 function DownloadPage() {
 	local URL
-	local ReferrerFunc
-	local ReferrerURL
+	local Referrer
+	local OldIFS
+        local Text
+	local TextLine
+	local Links
+	local IndexRegex
+	local HttpRegex
+	local IndexID
+
 	URL=$1
-	ReferrerFunc=$2
-	ReferrerURL=$3
+	Referrer=$2
 
 	# Sanity Check the URL
 	if ! CheckURLSanity "${URL}"
 	then 
 		echo $ReturnVal
 		unset ReturnVal
-		$ReferrerFunc "${ReferrerURL}"
+		Prompt "${Referrer}}"
 	fi
 
-        local Text
-	Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -justify -dump  ${URL}`
-	#Text=`$LynxBin -useragent=SimplePktPortal_L_y_n_x -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -trim_input_fields -justify -dump  ${URL} | sed '/^$/d'`
 
-	local Links
-	Links=`${LynxBin} -useragent=SimplePktPortal_L_y_n_x -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
-
-	# Compile list of results into an array.
-	local OldIFS
+	# Inits
+	GlobalTextArray=()
 	OldIFS=$IFS
 	IFS=$'\n'
 
+	Text=`$LynxBin -selective -useragent=SimplePktPortal_L_y_n_x -connect_timeout=10 -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -justify -dump  ${URL}`
+
+	GlobalFullTextString="$Text"
+	GlobalTextString=""
+	for TextLine in ${Text}
+	do
+		# Array Method
+		GlobalTextArray+=($TextLine)
+		# String Method
+		GlobalTextString+="$TextLine"
+	done
+
+	# Clean up any previous data
+	GlobalLinkArray=()
+	GlobalLinkString=""
+	IndexID=""
+
+	# Fetch Link List
+ 	Links=`${LynxBin} -selective -useragent=SimplePktPortal_L_y_n_x  -connect_timeout=10 -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+
 	# SOME Pages will return links that Lynx will skip over yet still increments the Lynx link number displayed...
 	# This logic sets the links into an array where the index of the array is identical to the link number Lynx displayed.
-	local IndexRegex
-	local HttpRegex
-	GlobalLinkList=""
-	for Results in ${Links}
-	do
-		IndexRegex='^((\ )+|)+([0-9]+)' # Bleugh
-		HttpRegex='(https?.*)' # Barf
-		[[ $Results =~ $IndexRegex ]] && IndexID=`echo ${BASH_REMATCH[0]} | xargs`  # Trim the whitepaces
-		[[ $Results =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
-		HttpURL=`echo $HttpURL | sed -e 's/ /%20/g'` # Fix for URL item with spaces
-		if ! [ -z $IndexID ] # There's always one, grrr. Lynx returns a line "References" before the link list...
-		then
-			GlobalLinksArray[$IndexID]=$HttpURL
-			# Build the human readable list of links
-			GlobalLinkList+="$IndexID = $HttpURL\n"
 
+	for LinkLine in ${Links}
+	do
+		IndexRegex='^((\ )+|)+([0-9]+)' # Bleugh, scrape away text formatting to get ID 
+		HttpRegex='(https?.*)' # Barf
+		[[ $LinkLine =~ $IndexRegex ]] && IndexID=`echo ${BASH_REMATCH[0]} | xargs`  # Trim the whitepaces
+		if  [ -z $IndexID ]; then 
+			# There's always one, grrr. Lynx returns a line "References" before the link list...
+			# Skip anything that doesn't start with a sane index number
+			continue
 		fi
+		[[ $LinkLine =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
+		HttpURL=`echo $HttpURL | sed -e 's/ /%20/g'` # Fix for URL item with spaces
+		HttpURL=`echo $HttpURL | sed -e 's/https:\/\/duckduckgo.com\/l\/?uddg=//g'` # Fudge search results to stop redirects polluting the link list
+		HttpURL=`echo $HttpURL | sed -e 's/\&rut=.*//g'` # Fudge search results to stop redirects polluting the link list
+		# Associative Array Method
+		GlobalLinkArray[$IndexID]=$HttpURL
+		# Build the human readable list of links
+		GlobalLinkString+="$IndexID = $HttpURL|"
 	done
 	IFS=$OldIFS
-
-	# The Globals:
-	# GlobalLinksArray
-	# GlobalLinkList
-	GlobalText="${Text}"
 }
 
 function Prompt() {
-	local URL
-	local RestartURL
+	local Referrer
 
-	URL=$1
-	RestartURL=$1
+	Referrer=$1
 
 	# Prompt
-	local MyLinkID
+	local Choice
 	echo "[H] for Help -->"
-	read MyLinkID
+	read Choice
+	Choice=`echo $Choice | tr '[:upper:]' '[:lower:]'`
 
 	# Trim Input
-	local LinkIDFix
-	LinkIDFix=${MyLinkID//[$'\t\r\n']} && MyLinkID=${MyLinkID%%*( )}
+	local ChoiceClean
+	ChoiceClean=${Choice//[$'\t\r\n']} && Choice=${Choice%%*( )}
 
 	# Handle Link Choice
-	local LinkIDRegex
-	LinkIDRegex='^([0-9])+$' 
-
-	if [[ $LinkIDFix =~ $QuitCommandRegex ]] 
+	local ChoiceRegex
+	ChoiceRegex='^([0-9]{1,4})$' 
+#
+	if [[ $ChoiceClean =~ $QuitCommandRegex ]] 
 	then
 		Quit
-	elif [[ $LinkIDFix =~ $ListCommandRegex ]] 
+	elif [[ $ChoiceClean =~ $FullCommandRegex ]] 
 	then
-		LinkCount=${#GlobalLinksArray[*]}
-		if [ $LinkCount -gt $WarningLimit ]
-		then 
-			echo "Link list ${LinkCount} entries, continue? (Y/n)"
-			unset AskThem
-			local AskThem
-			read AskThem
-			AskThemClean=${AskThem//[$'\t\r\n']} && AskThem=${AskThem%%*( )}
-			if ! [[ $AskThemClean =~ ^(Y|y).*$ ]]
-			then
-				echo "Okay lets not do that then..."
-				Prompt "${URL}"
-			fi
-		fi
-		echo -e ${GlobalLinkList} # Display Links
-		Prompt "${URL}" # Prompt
-	elif [[ $LinkIDFix =~ $NewCommandRegex ]] 
+		FullText
+	elif [[ $ChoiceClean =~ ^(op)$ ]]
 	then
-		unset GlobalLinkList
-		unset GlobalLinkArray
-		unset GlobalText
-		Begin
-	elif [[ $LinkIDFix =~ $RedisplayCommandRegex ]] 
+		echo "Lines Per Page: $WarningLimit"
+		Prompt
+	elif [[ $ChoiceClean =~ $ListCommandRegex ]] 
+	then
+		LinkList
+	elif [[ $ChoiceClean =~ $NewLinkRegex ]] 
+	then
+		GlobalLinkArray=()
+		GlobalTextArray=()
+		NewLink
+	elif [[ $ChoiceClean =~ $SearchRegex ]] 
+	then
+		GlobalLinkArray=()
+		GlobalTextArray=()
+		Search
+	elif [[ $ChoiceClean =~ $RedisplayCommandRegex ]] 
 	then
 		echo -e "Redisplaying Page..."
-		echo -e "$GlobalText"
-		Prompt "${URL}"
-	elif [[ $LinkIDFix =~ $HelpCommandRegex ]] 
+		DisplayPage "${Referrer}"
+	elif [[ $ChoiceClean =~ $OptionPagingRegex ]] 
 	then
+		OptionPaging "$ChoiceClean"
+	elif [[ $ChoiceClean =~ $HelpCommandRegex ]] 
+	then
+		Help "${Referrer}"
+	elif [[ $ChoiceClean =~ $MenuCommandRegex ]] 
+	then
+		GlobalLinkArray=()
+		GlobalTextArray=()
+		Initialize
+	elif [[ $ChoiceClean =~ $BackCommandRegex ]]
+	then
+		if [[ ${Referrer} == "" ]]
+		then
+			echo "Error: We can't go there!"
+			Prompt "${PortalURL}" 
+			exit
+		else
+			GlobalLinkArray=()
+			GlobalTextArray=()
+			FetchPage "${Referrer}" "${Referrer}"
+		fi
+	elif  [[ $ChoiceClean =~ $ChoiceRegex ]] 
+	then
+		# So an actual link ID has been requested...
+		LoadPage "${ChoiceClean}" "${Referrer}"
+	else
+
+		echo "Error: Oops! Try H for Help"
+		Prompt "${Referrer}" # Again
+		exit
+	fi
+
+}
+
+function FullText() {
+		if [[ $FetchFullText == "1" ]]
+	       	then
+			FetchFullText=0
+			echo "Paged Mode Set"
+		else
+			FetchFullText="1"
+			echo "Fully Formatted Full Page Mode Set"
+		fi
+
+		Prompt
+}
+
+function Help() {
+	local Referrer
+	Referrer=$1
+
 		echo -e "Navigate pages using the number highlighted between [ ]"
 		echo -e "To view a particular page, enter just the page number."
 		echo -e ""
@@ -359,67 +515,103 @@ function Prompt() {
 		echo -e "will be prompted with the choice to continue or not."
 		echo -e ""
 		echo -e "Commands:"
-		echo -e "B - Back to previous page"
+		echo -e "F - Toggled between Formatted Full Page and Paged"
+		echo -e "    Note: Paged (default) is also fully condensed"
 		echo -e "H - This text"
 		echo -e "L - List hyperlinks associated with the numbers"
-		echo -e "N - Navigate to a custom web address/hyperlink/URL"
+		echo -e "N <url> - Open <url>"
 		echo -e "M - Main Menu"
-		echo -e "Q - Quit"
+		echo -e "OP <1-99> - Set Lines Per Page. OP<enter> shows."
+		echo -e "S <text> - Search* for <text>"
+		echo -e "Q/B - Quit/Bye"
 		echo -e ""
-
-		Prompt "${URL}"
-	elif [[ $LinkIDFix =~ $MenuCommandRegex ]] 
-	then
-		unset GlobalLinkList
-		unset GlobalLinkArray
-		unset GlobalText
-		MainMenu
-	elif [[ $LinkIDFix =~ $BackCommandRegex ]]
-	then
-		if [[ ${BackPage} == "none" ]]
-		then
-			echo "Error: We can't go there!"
-			Prompt "${URL}" # Again
-			exit
-		else
-			unset GlobalLinkList
-			unset GlobalLinkArray
-			unset GlobalText
-			GetPage "${BackPage}" "Prompt" "${URL}"
-		fi
-	elif  [[ $LinkIDFix =~ $LinkIDRegex ]] 
-	then
-		# So an actual link ID has been requested...
-		# LinkRegex is Global
-		local LinkURL 
-
-		LinkURL=${GlobalLinksArray[${LinkIDFix}]}
-		if ! [[ $LinkURL =~ $LinkRegex ]]
-		then 
-			echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
-			Prompt "${URL}" # Again
-		fi
-		
-		# Update Back-Page Global
-		BackPage="${LinkURL}"
-
-		unset GlobalLinkList
-		unset GlobalLinkArray
-		unset GlobalText
-		LogUser "${LinkURL}"
-		GetPage "${LinkURL}" "Prompt" "${URL}"
-	else
-		echo "Error: Oops! Invalid Link Number."
-		Prompt "${URL}" # Again
-		exit
-	fi
-
+		echo -e "*Unstable/work in progress"
+		echo -e ""
+		Prompt "${Referrer}"
 }
 
-function MainMenu() {
-	        local URL	
-		URL=$PortalURL
-		GetPage "${URL}" "MainMenu"
+function LoadPage() {
+	local LinkURL
+	local Referrer
+	Position=$1
+	Referrer=$2
+
+	LinkURL="${GlobalLinkArray[${Position}]}"
+
+
+	if ! [[ $LinkURL =~ $LinkRegex ]]
+	then 
+		echo "Error: Sorry, ${LinkURL} cannot be accessed via this portal."
+		Prompt "${Referrer}" # Again
+	fi
+	
+	LogUser "${LinkURL}"
+	FetchPage "${LinkURL}" "${Referrer}"
+}
+
+
+function LinkList() {
+	local OutCount
+	local LineCount
+	local TotalCount
+	local CancelPaging
+	
+	LineCount=${#GlobalLinkArray[*]}
+	echo "Displaying ${LineCount} hyperlinks"
+	OutCount=0
+	TotalCount=0
+	OldIFS=$IFS
+	IFS=$'|'
+	for Output in $GlobalLinkString
+	do
+		if [ $OutCount -eq $WarningLimit ] && [ "$CancelPaging" != "1" ]
+		then
+			echo "ENTER = continue, A = Abort, C = Cancel Paging. [Line ${TotalCount}/${LineCount}]"
+			#echo "OP <1-99> = Set Pagesize."
+			read AbortState
+			AbortState=`echo $AbortState | tr '[:upper:]' '[:lower:]'`
+			AbortStateClean=${AbortState//[$'\t\r\n']} && AbortState=${AbortState%%*( )}
+			if [[ $AbortStateClean =~ ^(a|q)$ ]]
+			then
+				echo "Output Aborted!"
+				Prompt "${Referrer}"
+			elif [[ $AbortStateClean =~ ^(n)$ ]]
+			then
+				OutCount=0
+			elif [[ $AbortStateClean =~ ^(c)$ ]]
+			then
+				echo "Cancelled paging... displaying rest of page"
+				CancelPaging=1
+				continue
+			elif [[ $AbortStateClean =~ $OptionPagingRegex ]]
+			then
+				OptionPaging "${AbortStateClean}"
+				OutCount=0
+			elif [[ $AbortStateClean =~ ^([0-9]{1,4})$ ]]
+			then
+				# Load a page directly from the paged list
+				LoadPage "${AbortStateClean}" "${Referrer}"
+			else
+				# Treat anything else, like Enter, as a nope.
+				OutCount=0
+			fi
+		fi
+		echo $Output
+		OutCount=$((OutCount+1))
+		TotalCount=$((TotalCount+1))
+	done
+	CancelPaging=0
+	IFS=$OldIFS	
+	Prompt ${Referrer}
+}
+
+function Initialize() {
+	        local Referrer	
+		Referrer=$PortalURL
+		GlobalLinkString=""
+		GlobalLinkArray=()
+		GlobalTextArray=()
+		FetchPage "${PortalURL}" "${Referrer}"
 }
 
 function WelcomeMsg() {
@@ -480,4 +672,4 @@ then
 fi
 
 WelcomeMsg "${CallsignNOSSID}"
-MainMenu
+Initialize
