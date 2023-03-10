@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with browse.sh.  If not, see http://www.gnu.org/licenses
 
-Version="0.3.3a by PE1RRR updated Friday 2023-03-10"
+Version="0.3.4a by PE1RRR updated Friday 2023-03-10"
 #
 # Configuration
 # 
@@ -77,13 +77,13 @@ export https_proxy=$myproxy
 #
 # Global Vars
 LinkRegex='[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*)'
+NewLinkRegex='(^n\ )((https?:\/\/|)[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*))$'
 QuitCommandRegex='^(0|q|b)$'
 MenuCommandRegex='^(m)$' 
 ListCommandRegex='^(l)$'
 BackCommandRegex='^(p)$'
 FullCommandRegex='^(f)$'
 OptionPagingRegex='^(op)(\ )([0-9]{1,2})$'
-NewLinkRegex="^(n)(\ )(${LinkRegex})"
 SearchRegex='^(s)(\ )([a-zA-Z0-9@:%\._\+~#=].+)'
 RedisplayCommandRegex='^(r)$'
 HelpCommandRegex='^(h|\?)$'
@@ -116,6 +116,7 @@ function CheckURLSanity() {
 	# Ignore case with ,, below
 	if ! [[ ${CheckURL,,} =~ $LinkRegex ]]
 	then 
+		echo "debug $CheckURL"
 	    ReturnVal="Error: Not a valid URL"
 	    return 1
 	fi
@@ -195,19 +196,21 @@ function NewLink() {
 
 	local Query
 	local QueryURL
-	 [[ $ChoiceClean =~ $NewLinkRegex ]] && Address=`echo  ${BASH_REMATCH[3]}`
+	 [[ $ChoiceClean =~ $NewLinkRegex ]] && Address=`echo  ${BASH_REMATCH[2]}`
 	
 	# Trim Input
 	URLFix=${Address//[$'\t\r\n']} && Address=${Address%%*( )}
 
+	# If entered URL doesnt have a http/https prefix
 	if [[ $URLFix =~ ^https?:\/\/ ]]
 	then
 		URL="${URLFix}"
 	else
+		# Default to http
 		URL="http://${URLFix}"
 	fi
 
-	echo "Processing ${URL}... please wait."
+	echo "Processing ${URL}..."
 
 	# Update Last Page Global
 
