@@ -116,7 +116,6 @@ function CheckURLSanity() {
 	# Ignore case with ,, below
 	if ! [[ ${CheckURL,,} =~ $LinkRegex ]]
 	then 
-		echo "debug $CheckURL"
 	    ReturnVal="Error: Not a valid URL"
 	    return 1
 	fi
@@ -128,7 +127,6 @@ function CheckURLSanity() {
 		return 1
 	fi
 
-	echo "debug $CheckURL"
 	if $CurlBin -H "${UserAgent}" --output /dev/null --silent --connect-timeout 5 --head --fail "${CheckURL}"; then
 		ContentType=$($CurlBin -H "${UserAgent}" -s -L -I --connect-timeout 5 --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
 		#echo "Content: $ContentType"
