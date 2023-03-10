@@ -128,8 +128,9 @@ function CheckURLSanity() {
 		return 1
 	fi
 
-	if $CurlBin -H "${UserAgent}" --output /dev/null --silent --head --fail "${CheckURL}"; then
-		ContentType=$($CurlBin -H "${UserAgent}" -s -L -I --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
+	echo "debug $CheckURL"
+	if $CurlBin -H "${UserAgent}" --output /dev/null --silent --connect-timeout 5 --head --fail "${CheckURL}"; then
+		ContentType=$($CurlBin -H "${UserAgent}" -s -L -I --connect-timeout 5 --head -XGET "${CheckURL}" --output /dev/null -w '%{content_type}\n')
 		#echo "Content: $ContentType"
 		ContentTypeRegex='^(text\/html|text\/plain).*$'
 		if  ! [[ $ContentType =~ $ContentTypeRegex ]] 
