@@ -25,7 +25,7 @@ UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 F
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser.log; sudo chown pi:pi /var/log/bpq-browser.log
 
 # Link to your start page
-PortalURL="http://static.ehvairport.com/~bpq/"
+PortalURL="http://matrix.ehvairport.com/~bpq/"
 
 # It is recommended to set up a proxy server locally to handle the requests from this script
 # it adds a level of control over which content can and cannot be requested, squid proxy is
@@ -89,7 +89,7 @@ RedisplayCommandRegex='^(r)$'
 HelpCommandRegex='^(h|\?)$'
 WarningLimit=10
 Referrer="none"
-
+UserAgent="Mozilla/5.0 (X11; U; Linux armv7l like Android; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/533.2+ Kindle/3.0+"
 declare -A GlobalLinkArray # I'm an associative array!
 GlobalTextString=""
 
@@ -366,7 +366,7 @@ function DownloadPage() {
 	OldIFS=$IFS
 	IFS=$'\n'
 
-	Text=`$LynxBin -selective -useragent=SimplePktPortal_L_y_n_x -connect_timeout=10 -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -justify -dump  ${URL}`
+	Text=`$LynxBin -selective -useragent=${UserAgent} -connect_timeout=10 -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -justify -dump  ${URL}`
 
 	GlobalFullTextString="$Text"
 	GlobalTextString=""
@@ -384,7 +384,7 @@ function DownloadPage() {
 	IndexID=""
 
 	# Fetch Link List
- 	Links=`${LynxBin} -selective -useragent=SimplePktPortal_L_y_n_x  -connect_timeout=10 -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
+ 	Links=`${LynxBin} -selective -useragent=${UserAgent}  -connect_timeout=10 -hiddenlinks=ignore -dump -unique_urls -listonly ${URL}`
 
 	# SOME Pages will return links that Lynx will skip over yet still increments the Lynx link number displayed...
 	# This logic sets the links into an array where the index of the array is identical to the link number Lynx displayed.
