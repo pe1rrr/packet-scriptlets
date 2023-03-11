@@ -401,8 +401,11 @@ function DownloadPage() {
 		fi
 		[[ $LinkLine =~ $HttpRegex ]] && HttpURL=${BASH_REMATCH[0]} # It's an URL baby.
 		HttpURL=`echo $HttpURL | sed -e 's/ /%20/g'` # Fix for URL item with spaces
-		HttpURL=`echo $HttpURL | sed -e 's/https:\/\/duckduckgo.com\/l\/?uddg=//g'` # Fudge search results to stop redirects polluting the link list
-		HttpURL=`echo $HttpURL | sed -e 's/\&rut=.*//g'` # Fudge search results to stop redirects polluting the link list
+
+		# Hacks for specific sites- DuckDuckGo
+		#HttpURL=`echo $HttpURL | sed -e 's/https:\/\/duckduckgo.com\/l\/?uddg=//g'` # Fudge search results to stop redirects polluting the link list
+		#HttpURL=`echo $HttpURL | sed -e 's/\&rut=.*//g'` # Fudge search results to stop redirects polluting the link list
+
 		# Associative Array Method
 		GlobalLinkArray[$IndexID]=$HttpURL
 		# Build the human readable list of links
