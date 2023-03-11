@@ -171,8 +171,7 @@ function Search() {
 	Referrer="$1"
 
 	[[ $ChoiceClean =~ $SearchRegex ]] && Query=`echo  ${BASH_REMATCH[3]}`
-	echo "Note: Search relies on a 3rd party and may not work."
-	echo "Results transmitted OTA are the responsibility of the requester."
+	echo "Wikipedia Search. Note: All queries are logged"
 	echo "Processing: $Query. Please wait."
 	
 	Query=`echo $Query | sed -e 's/ /%20/g'` 
