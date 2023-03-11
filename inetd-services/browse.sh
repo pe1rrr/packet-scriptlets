@@ -178,7 +178,8 @@ function Search() {
 	Query=`echo $Query | sed -e 's/ /%20/g'` 
 	Query=`echo $Query | sed -e 's/\"/%22/g'` 
 	Query=`echo $Query | sed -e 's/\&/%26/g'` 
-	QueryURL="http://lite.duckduckgo.com/lite/?&q=${Query}"
+	#QueryURL="http://lite.duckduckgo.com/lite/?&q=${Query}"
+	QueryURL="https://en.m.wikipedia.org/w/index.php?title=Special:Search&ns0=1&search=${Query}"
 
 	FetchPage "${QueryURL}" "${QueryURL}"
 
@@ -366,7 +367,7 @@ function DownloadPage() {
 	OldIFS=$IFS
 	IFS=$'\n'
 
-	Text=`$LynxBin -selective -useragent=${UserAgent} -connect_timeout=10 -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -justify -dump  ${URL}`
+	Text=`$LynxBin -selective -useragent=${UserAgent}  -connect_timeout=10 -unique_urls -number_links -hiddenlinks=ignore -nolist -nomore -justify -dump  ${URL}`
 
 	GlobalFullTextString="$Text"
 	GlobalTextString=""
@@ -524,7 +525,7 @@ function Help() {
 		echo -e "N <url> - Open <url>"
 		echo -e "M - Main Menu"
 		echo -e "OP <1-99> - Set Lines Per Page. OP<enter> shows."
-		echo -e "S <text> - Search* for <text>"
+		echo -e "S <text> - Search Wikipedia* for <text>"
 		echo -e "Q/B - Quit/Bye"
 		echo -e ""
 		echo -e "*Unstable/work in progress"
