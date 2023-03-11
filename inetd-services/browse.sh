@@ -21,7 +21,6 @@ Version="0.3.4a by PE1RRR updated Friday 2023-03-10"
 # 
 LynxBin="/usr/bin/lynx"  # sudo apt install lynx
 CurlBin="/usr/bin/curl"  # sudo apt install curl
-UserAgent="User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
 WebLogFile="/var/log/bpq-browser.log" # sudo touch /var/log/bpq-browser.log; sudo chown pi:pi /var/log/bpq-browser.log
 
 # Link to your start page
