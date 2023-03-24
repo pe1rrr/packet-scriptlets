@@ -1,0 +1,35 @@
+#!/bin/bash
+Language="english"
+# Tip: you can use symlinks to this script to give the program
+# a different name e.g pg post instead of pg shout.
+# ln -s shout-history post-history
+Title="pg post"
+ShoutPath=/home/bpq/nodes/pe1rrr/fbb/etc/ax25/fbb/lang
+ShoutFile=${ShoutPath}/${Language}_shouts.txt
+MaxShoutsToShow=100
+######## 
+WelcomeText=`cat $WelcomeFile`
+
+UserInput="$5"
+
+CleanString="${UserInput//[^0-9]/}"
+CleanString=${CleanString//[$'\t\r\n']} && CleanString=${CleanString%%*( )}
+
+ShoutCount=`echo ${CleanString} #| cut -f1`
+
+
+if [ $ShoutCount -gt ${MaxShoutsToShow} ];then
+	echo "${Title} --> max ${MaxShoutsToShow}"
+	ShoutCount=${MaxShoutsToShow}
+fi
+if [ -z "$ShoutCount" ] || [ $ShoutCount == 0 ]; then
+	echo "${Title} --> specify how many (max: ${MaxShoutsToShow})"
+	ShoutCount=5
+fi
+
+IFS=$'\n'
+
+PreviousPosts=`tail -${ShoutCount} ${ShoutFile}`
+
+printf '%s\n' ${PreviousPosts}
+

@@ -75,7 +75,7 @@ export https_proxy=$myproxy
 ##### End of Config - Do not change anything below here.
 #
 # Global Vars
-LinkRegex='[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*)'
+LinkRegex='https?:\/\/|[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*)'
 NewLinkRegex='(^n\ )((https?:\/\/|)[-a-zA-Z0-9@:%._\+\-~#=]{1,256}\.[a-zA-Z0-9()]{1,7}\b([-a-zA-Z0-9()@:%_\+.~#\?\&//=]*))$'
 QuitCommandRegex='^(0|q|b)$'
 MenuCommandRegex='^(m)$' 
@@ -86,9 +86,10 @@ OptionPagingRegex='^(op)(\ )([0-9]{1,2})$'
 SearchRegex='^(s)(\ )([a-zA-Z0-9@:%\._\+~#=].+)'
 RedisplayCommandRegex='^(r)$'
 HelpCommandRegex='^(h|\?)$'
-WarningLimit=10
+WarningLimit=15
 Referrer="none"
 UserAgent="Packet Radio Portal $Version L_y_n_x"
+#CurlUserAgent="Mozilla/5.0 (X11; U; Linux armv7l like Android; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/533.2+ Kindle/3.0+"
 declare -A GlobalLinkArray # I'm an associative array!
 GlobalTextString=""
 
@@ -267,7 +268,7 @@ function DisplayPage() {
 	URL=$1
 	Referrer=$2
 
-	echo -e "Displaying ${URL}"
+#	echo -e "Displaying ${URL}"
 
 	OutCount=0
 	TotalCount=0

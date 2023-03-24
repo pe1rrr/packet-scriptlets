@@ -1,0 +1,113 @@
+#!/bin/bash
+Language="english"
+# Tip: you can use symlinks to this script to give the program
+# a different name e.g pg post instead of pg shout.
+# ln -s shout post
+Title="pg post"
+Sysop="PE1RRR"
+# Path to the FBB language directory for simpicity sake
+ShoutPath=/home/bpq/nodes/pe1rrr/fbb/etc/ax25/fbb/lang
+# FBB's system language storage path for the english.ent file (called upon BBS connection)
+CTextFile="${ShoutPath}/english.ent"
+# Where to store the shouts
+ShoutFile=${ShoutPath}/${Language}_shouts.txt
+# How many previous posts to show
+ShoutCount="4"
+# Max length of any post (characters)
+MaxLength=72
+# Location of BBS .ent Connect Text header
+# You will need to create this file (english_main.txt for example)
+# This will be the default CTEXT header prepended to the shout list
+WelcomeFile=${ShoutPath}/${Language}_main.txt
+
+
+
+######## 
+function RebuildConnectText() {
+	PreviousPosts=`tail -${ShoutCount} ${ShoutFile}`
+	cat > $CTextFile << EOM
+$WelcomeText
+"${Title} <message>"
+$PreviousPosts
+EOM
+
+}
+
+PreviousPosts=`tail -${ShoutCount} ${ShoutFile}`
+
+WelcomeText=`cat $WelcomeFile`
+
+UserInput="$*"
+
+# Callsign
+Callsign=`echo $UserInput | awk '{print $1}'`
+
+# Strip SSID
+Callsign=`echo $Callsign | cut -d'-' -f1`
+
+# Enable sysop to override post limit
+if [[ "$Callsign" == "$Sysop" ]] ;
+then
+	MaxShoutsInARow="1000"
+	Commander=1
+else
+	MaxShoutsInARow="2"
+	unset Commander
+fi
+
+CleanString="${UserInput//[^a-zA-Z0-9_\ ;\"\'%/?!@*#]/}"
+CleanString=${CleanString//[$'\t\r\n']} && CleanString=${CleanString%%*( )}
+
+
+# Check for double posting
+
+Text=`echo $CleanString | cut -d' ' -f5-`
+TextLength=`echo $Text |awk '{print length}'`
+if [ $TextLength -gt $MaxLength ]; then
+	echo "Sorry, maximum is ${MaxLength} characters"
+fi
+if [ $TextLength == 1 ]; then
+	if [[  $Commander == 1 ]];
+	then
+		if [[ "$Text" == "c" ]];
+		then
+			ClearDate=`date '+%F'`
+			#echo "[SYS] Clr:$ClearDate" > ${ShoutFile} 
+			echo "" > ${ShoutFile}
+			echo "Cleared Posts"
+			RebuildConnectText
+
+		fi
+	fi
+fi
+
+# Show last posts if no command given
+if [ $TextLength -lt 1 ]; then
+	echo "Last ${ShoutCount} Posts:"
+	printf '%s\n' "$PreviousPosts"
+fi
+
+PreviousShoutCount=`tail -${MaxShoutsInARow} ${ShoutFile} | grep "(${Callsign})" | wc -l`
+
+if [ $PreviousShoutCount -ge ${MaxShoutsInARow} ]; then
+	echo "${Title} --> you have posted $PreviousShoutCount/${MaxShoutsInARow} posts in a row-->"
+		exit
+	else
+		if [ $TextLength -gt 1 ]; then
+			# Post to shout file
+			FormattedCallsign=`printf '%-6s' "$Callsign"`
+			# Pad callsign to justify text
+			printf '%s\n' "(${FormattedCallsign}) $Text" >> ${ShoutFile}
+			echo ""
+			tail -${ShoutCount} ${ShoutFile}
+			echo ""
+			echo "${Title}: posted"
+			RebuildConnectText
+
+		else
+			echo "${Title}: you may post another-->"
+			exit
+		fi
+fi
+
+
