@@ -87,7 +87,7 @@ if [ $TextLength -lt 1 ]; then
 	printf '%s\n' "$PreviousPosts"
 fi
 
-PreviousShoutCount=`tail -${MaxShoutsInARow} ${ShoutFile} | grep "(${Callsign}" | wc -l`
+PreviousShoutCount=`tail -${MaxShoutsInARow} ${ShoutFile} | grep "(${Callsign}[ )]" | wc -l`
 
 if [ $PreviousShoutCount -ge ${MaxShoutsInARow} ]; then
 	echo "${Title} --> you have posted $PreviousShoutCount/${MaxShoutsInARow} posts in a row-->"
